@@ -1,0 +1,28 @@
+@startuml
+node "<<device>>\n Server" as Server{
+component "web-server" as web
+component "mqtt broker" as mqtt
+component statistics as stats
+database DB
+}
+stats -- DB
+stats -- mqtt
+web -- DB
+
+node "<<device>>\n RPi" as RPi{
+component application
+}
+node sensors
+
+node "<<device>>\n phone/computer" as phone{
+component browser
+}
+
+Server -up- phone : <<HTTP>>
+note right on link
+Frontend interface
+end note
+
+RPi -- sensors : <<GPIO>>
+RPi -- Server : <<MQTT>>
+@enduml

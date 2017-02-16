@@ -1,0 +1,39 @@
+@startuml
+
+Admin ..-> User :<<include>>
+
+left to right direction
+frame "Find-Toilet Application"{
+(Get notifications\n about sensor vandalism\n and errors) as sv
+(Get notifications\n about safety issue) .-> (sv) : <<extend>>
+
+User -> (View available toilets)
+User -> (Find a nearby vacant toilet)
+User -> (Set filters)
+User -> (See statistics)
+User -> (Report something\n wrong on a toilet)
+
+Admin -> (Add toilet)
+Admin -> (Mark toilet status)
+Admin -> (sv)
+Admin -> (Log in)
+}
+
+:Authentication System: <- (Log in)
+:Map System: <- (Find a nearby vacant toilet)
+:Map System: <- (View available toilets)
+
+DB <-up- (View available toilets)
+DB <-up- (Find a nearby vacant toilet)
+DB <-up- (Set filters)
+DB <-up- (See statistics)
+DB <-up- (Report something\n wrong on a toilet)
+DB <-up- (Add toilet)
+DB <-up- (Mark toilet status)
+DB <-up- (sv)
+
+package Key{
+:Actor:
+(Use case)
+}
+@enduml
