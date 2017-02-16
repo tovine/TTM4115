@@ -1,0 +1,4 @@
+// Ignore various editor temp-files
+*.swp
+*.swo
+*~
