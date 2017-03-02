@@ -1,29 +1,48 @@
 #!/usr/bin/env python3
 import sys, os, asyncio, configparser
+from mqtt_client import MQTT
 
-from mqtt_client import main_coro
-
-
+DEBUG = False
 default_config = """
 [MQTT]
-broker=mqtt://test.mosquitto.org/
+broker = test.mosquitto.org
+port = default
+certfile = None
+print_subscriptions = True
 
 [sensor]
 
-"""
+"""[1:]
 
-async def wakeup():
-	while 1:
-		#print("test")
-		await asyncio.sleep(0.5)
+async def init(mqtt):
+	#while 1:
+	#	await asyncio.sleep(0.5)
+	print("test1")
+	#await mqtt.publish("test", "spis meg")
+	await mqtt.subscribe('$SYS/broker/uptime', callback=print)
+	print("test2")
 
-
-def main():
+def main(ini):
 	loop = asyncio.get_event_loop()
 	
+	broker   = ini.get   ("MQTT", "broker")
+	port     = ini.getint("MQTT", "port") if not ini.get("MQTT", "port")=="default" else 1883
+	certfile = ini.get   ("MQTT", "certfile")
+	mdebug   = ini.getboolean("MQTT", "print_subscriptions")
+	
+	if mdebug:
+		global DEBUG
+		DEBUG=True
+	
+	mqtt = MQTT(loop, broker, port)
+	
+	#sensor_topic = 
+	
+	
 	tasks = [
-		main_coro(),
-		wakeup()
+		mqtt.main_coro(debug=mdebug, stopLoop=True),
+		mqtt.sub_coro(),
+		init(mqtt)
 	]
 	
 	#waits untill all tasks are complete
@@ -38,11 +57,8 @@ if __name__ == '__main__':
 		with open(configfile, "w") as f:
 			f.write(default_config)
 	
-	ini = configparser.configparser(configfile)
+	ini = configparser.ConfigParser()
+	with open(configfile, "r") as f:
+		ini.read_file(f)
 	
-	mqtt_broker = ini.get("MQTT", "broker")
-	mqtt_port = ini.get("MQTT", "broker")
-	
-	ini = configparser.configparser("")
-	
-	main()
+	main(ini)
