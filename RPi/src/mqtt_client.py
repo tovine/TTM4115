@@ -31,18 +31,24 @@ class MQTT():
 		
 		if type(data) != bytes:
 			data = bytes(data, "UTF-8")
+		
 		await self.C.publish(topic, data, qos=qos)
-	async def subscribe(self, topic, callback=lambda data: None, qos=None):#no wildchars yet
+	async def subscribe(self, topic, callback=lambda data: None, decode=True, qos=QOS_0):#no wildchar support
 		while not self.connected:
 			await asyncio.sleep(0.2)
 		
+		if decode:
+			old = callback
+			def callback(data):
+				old(str(data, "utf-8"))
+		
 		self.topic[topic] = callback
-		await C.subscribe([(topic, qos)])
-	
-	#normal methods (requires sub_coro to be running as well)
-	def publishQ(self, *args, **kwargs):
+		await self.C.subscribe([(topic, qos)])
+			
+	#normal methods (requires queue_coro to be running as well)
+	def enqueue_publish(self, *args, **kwargs):
 		self.queue.append((self.publish, args, kwargs))
-	def subscribeQ(self, *args, **kwargs):
+	def enqueue_subscribe(self, *args, **kwargs):
 		self.queue.append((self.subscribe, args, kwargs))
 	
 	#mainloops
@@ -52,10 +58,6 @@ class MQTT():
 		if debug: print("Connecting to %s..." % self.broker)
 		
 		await C.connect(self.broker)
-		await C.subscribe([
-			('$SYS/broker/uptime', QOS_1)
-		])
-		
 		self.connected = True
 		
 		if debug:print("Connected to %s" % self.broker)
@@ -69,12 +71,12 @@ class MQTT():
 				
 				if packet.variable_header.topic_name in self.topic:
 					func = self.topic[packet.variable_header.topic_name]
-					self.EventLoop.call_soon(func, data)
-					if debug:
-						print("%s() added to EventLoop.call_soon" % func.__name__)
+					self.EventLoop.call_soon(func, packet.payload.data)
 				
 			await C.unsubscribe(list(self.topic.keys()))
 			await C.disconnect()
+			
+			if debug:print("Disconnected from %s" % self.broker)
 		except ClientException as ce:
 			print("Client exception: %s" % ce)
 
@@ -83,12 +85,12 @@ class MQTT():
 		if stopLoop:
 			self.EventLoop.stop()
 	
-	async def sub_coro(self):
+	async def queue_coro(self):#optional loop
 		while 1:
-			if self.queue:
+			while self.queue:
 				func, args, kwargs = self.queue.pop(0)
 				await func(*args, **kwargs)
-			await asyncio.sleep(1)#optional loop
+			await asyncio.sleep(1)
 	
 
 
