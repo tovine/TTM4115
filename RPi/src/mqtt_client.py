@@ -2,6 +2,10 @@ import asyncio
 from inspect import iscoroutinefunction
 from hbmqtt.client import MQTTClient, ClientException
 from hbmqtt.mqtt.constants import QOS_0, QOS_1, QOS_2
+from hbmqtt.broker import Broker
+
+def matches(topic, a_filter):
+	return Broker.matches(none, topic, a_filter)
 
 class MQTT():
 	config = {
@@ -19,9 +23,9 @@ class MQTT():
 		self.C = MQTTClient(config=self.config)#, loop=EventLoop)
 		self.broker = 'mqtt%s://%s:%i/' % ("s"*use_ssl, broker, port)
 		self.lastwill = None
-				
+		
 		#keeping track of subscrptions:
-		self.topic = {}#["topic"] = [callback]
+		self.topics = {}#["topic"] = [callback]
 		self.connected = False
 		
 		self.queue = []#deasyncify. [i] = (func, args, kwargs)
@@ -45,16 +49,16 @@ class MQTT():
 			data = bytes(data, "UTF-8")
 		
 		await self.C.publish(topic, data, qos=qos)
-	async def subscribe(self, topic, callback=lambda data: None, decode=True, qos=QOS_0):#no wildchar support
+	async def subscribe(self, topic, callback=lambda topic, data: None, decode=True, qos=QOS_0):
 		while not self.connected:
 			await asyncio.sleep(0.2)
 		
 		if decode:
 			old = callback
-			def callback(data):
-				old(str(data, "utf-8"))
+			def callback(topic, data):
+				old(topic, (str(data, "utf-8"))
 		
-		self.topic[topic] = callback
+		self.topics[topic] = callback
 		await self.C.subscribe([(topic, qos)])
 		
 	#normal counterparts (requires queue_coro() to be running alongside main_coro())
@@ -72,7 +76,7 @@ class MQTT():
 		await C.connect(self.broker)
 		self.connected = True
 		
-		if debug:print( "Connected to %s" % self.broker)
+		if debug: print( "Connected to %s" % self.broker)
 		
 		asyncio.ensure_future(self._queue_coro())
 		#await self.EventLoop.create_task(cor1())
@@ -80,14 +84,14 @@ class MQTT():
 		try:
 			while 1:
 				message = await C.deliver_message()
-				packet = message.publish_packet
+				topic = message.publish_packet.variable_header.topic_name
+				data = message.publish_packet.payload.data
 				if debug:
-					print("%s: %s" % (packet.variable_header.topic_name, str(packet.payload.data, "utf-8")))
+					print("%s: %s" % (topic, str(data, "utf-8")))
 				
-				if packet.variable_header.topic_name in self.topic:
-					func = self.topic[packet.variable_header.topic_name]
-					self.EventLoop.call_soon(func, packet.payload.data)
-				
+				for func in (self.topics[i] for i in self.topics if matches()):
+					self.EventLoop.call_soon(func, data)
+			
 			await C.unsubscribe(list(self.topic.keys()))
 			await C.disconnect()
 			

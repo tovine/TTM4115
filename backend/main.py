@@ -1,25 +1,21 @@
-#!/usr/bin/env python3
-import sys, os, asyncio, configparser
+import asyncio, configparser
 from mqtt_client import MQTT
-#import sensor
+from database import main_coro
 
-DEBUG = False
 default_config = """
 [MQTT]
 broker = test.mosquitto.org
 port = default
 certfile = None
 
-[sensor]
-ID = 0
-GPIO_BCM_Port = 4
+[postres]
+host=127.0.0.1
+dbname=aiopg
+user=aiopg
+password=hunter2
 
 """[1:-1]#removes first and last newline
 
-async def init(mqtt):
-	print("Subscribing to \"$SYS/broker/uptime\"... ", end="")
-	await mqtt.subscribe("$SYS/broker/uptime", callback=print)
-	print("Done!")
 
 def main(ini):
 	loop = asyncio.get_event_loop()
@@ -30,22 +26,21 @@ def main(ini):
 	
 	mqtt = MQTT(loop, broker, port)
 	
-	sensorid = ini.getint("sensor", "ID")
-	gpio_port = ini.getint("sensor", "GPIO_BCM_Port")
+	dbHost   = get("postgres", "host")
+	dbName   = get("postgres", "dbname")
+	dbUser   = get("postgres", "user")
+	dbpasswd = get("postgres", "password")
 	
 	#run:
 	tasks = [
-		mqtt.main_coro(debug=DEBUG, stopLoop=True),
+		mqtt.main_coro(),
 		mqtt.queue_coro(),
-		sensor.maincoro(loop, mqtt, sensorid, gpio_port)
-		#init(mqtt)
+		main_coro(mqtt, dbHost, dbName, dbUser, dbPasswd),
 	]
 	
-	loop.run_until_complete(asyncio.gather(*tasks))#waits untill all tasks are complete
-	loop.close()
+	loop.run_until_complete(asyncio.gather(*tasks))
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
 	configfile = sys.argv[1] if len(sys.argv) > 1 else "config.ini"
 	if not os.path.exists(configfile):
 		with open(configfile, "w") as f:

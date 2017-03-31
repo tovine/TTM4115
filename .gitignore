@@ -8,5 +8,6 @@ __pycache__/
 *.pyc
 *.pyo
 
-//RPi config file:
+//config files:
 RPi/src/config.ini
+backend/config.ini
