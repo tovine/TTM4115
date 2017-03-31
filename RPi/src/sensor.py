@@ -1,15 +1,38 @@
 from mqtt_client import QOS_0, QOS_1, QOS_2
-# We could either use https://sourceforge.net/p/raspberry-gpio-python/wiki/Home/
-# Or just use the raspbian-included binary /usr/bin/gpio
-'''
-Example: 
-def gpio(cmd, pin, value):
-	return subprocess.check_output(["gpio", cmd, str(pin), value])
+try:
+	import RPi.GPIO as GPIO
+except RuntimeError:
+	print("Error importing RPi.GPIO. Try running as superuser in a RPi")
+	import sys
+	sys.exit(1)
 
-# Read
-gpio("read", pin, None)
+sensor_topic = "door/%i/sensor"
+state_topic = "door/%i/state"
+states = {True:"open", False:"closed"}
+DEAD = "dead"
+ALIVE = "alive"
 
-# Write
-gpio("write", pin, value)
-'''
-# The disadvantage of calling the binary is that you don't get to subscribe to events on the pins, but have to poll (not really that big a problem though)
+#actually a coroutine
+def maincoro(eventloop, mqtt, ID, gpio_port):
+	mqtt.set_lastwill(sensor_topic % ID, DEAD, QOS_1, retain=True)
+	
+	GPIO.setmode(GPIO.BCM)
+	GPIO.setup(gpio_port, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+	
+	async def runtime(eventLoop, mqtt, ID, gpio_port):
+		await mqtt.publish(sensor_topic%ID, ALIVE, QOS_1, retain=True)
+		
+		PrevDoorstate = GPIO.input(gpio_port)
+		await mqtt.publish(state_topic%ID, states[PrevDoorstate], QOS_1, retain=True)
+		
+		while 1:
+			await asyncio.sleep(1)
+			
+			Doorstate = GPIO.input(gpio_port)
+			
+			if PrevDoorstate != Doorstate:
+				await mqtt.publish(state_topic%ID, states[Doorstate], QOS_1, retain=True)
+				PrevDoorstate = Doorstate
+		
+		await mqtt.publish(sensor_topic%ID, DEAD, QOS_1, retain=True)
+	return runtime(eventloop, mqtt, ID, gpio_port)

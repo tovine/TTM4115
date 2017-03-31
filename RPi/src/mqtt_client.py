@@ -13,10 +13,12 @@ class MQTT():
 	def __init__(self, EventLoop, broker, port=1883, use_ssl=False):
 		assert type(use_ssl) is bool
 		assert type(port) is int
+		self.config = self.config.copy()
 		
 		self.EventLoop = EventLoop
 		self.C = MQTTClient(config=self.config)#, loop=EventLoop)
 		self.broker = 'mqtt%s://%s:%i/' % ("s"*use_ssl, broker, port)
+		self.lastwill = None
 				
 		#keeping track of subscrptions:
 		self.topic = {}#["topic"] = [callback]
@@ -24,7 +26,17 @@ class MQTT():
 		
 		self.queue = []#deasyncify. [i] = (func, args, kwargs)
 	
-	#async methods
+	#further config
+	def set_lastwill(self, topic, message, QOS, retain = False):#must set be done before main_coro is run
+		self.config["will"] = {
+			"message": message,
+			"topic": topic,
+			"qos": QOS,
+			"retain" : retain
+		}
+		self.C.config.update(self.config)#totally not a bodge
+	
+	#coroutines
 	async def publish(self, topic, data, qos=None):
 		while not self.connected:
 			await asyncio.sleep(0.2)
@@ -44,14 +56,14 @@ class MQTT():
 		
 		self.topic[topic] = callback
 		await self.C.subscribe([(topic, qos)])
-			
-	#normal methods (requires queue_coro to be running as well)
+		
+	#normal counterparts (requires queue_coro() to be running alongside main_coro())
 	def enqueue_publish(self, *args, **kwargs):
 		self.queue.append((self.publish, args, kwargs))
 	def enqueue_subscribe(self, *args, **kwargs):
 		self.queue.append((self.subscribe, args, kwargs))
 	
-	#mainloops
+	#mainloop
 	async def main_coro(self, debug=False, stopLoop=False):
 		C = self.C
 		
@@ -60,7 +72,10 @@ class MQTT():
 		await C.connect(self.broker)
 		self.connected = True
 		
-		if debug:print("Connected to %s" % self.broker)
+		if debug:print( "Connected to %s" % self.broker)
+		
+		asyncio.ensure_future(self._queue_coro())
+		#await self.EventLoop.create_task(cor1())
 		
 		try:
 			while 1:

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys, os, asyncio, configparser
 from mqtt_client import MQTT
+#import sensor
 
 DEBUG = False
 default_config = """
@@ -10,16 +11,15 @@ port = default
 certfile = None
 
 [sensor]
+ID = 0
+GPIO_BCM_Port = 4
 
-"""[1:]
+"""[1:-1]#removes first and last newline
 
 async def init(mqtt):
-	#while 1:
-	#	await asyncio.sleep(0.5)
-	#await mqtt.publish("test", "spis meg")
-	print("test1")
+	print("Subscribing to \"$SYS/broker/uptime\"... ", end="")
 	await mqtt.subscribe("$SYS/broker/uptime", callback=print)
-	print("test2")
+	print("Done!")
 
 def main(ini):
 	loop = asyncio.get_event_loop()
@@ -30,20 +30,20 @@ def main(ini):
 	
 	mqtt = MQTT(loop, broker, port)
 	
-	#sensor_topic = 
-	
-	
-	
+	sensorid = ini.getint("sensor", "ID")
+	gpio_port = ini.getint("sensor", "GPIO_BCM_Port")
 	
 	#run:
 	tasks = [
 		mqtt.main_coro(debug=DEBUG, stopLoop=True),
 		mqtt.queue_coro(),
-		init(mqtt)
+		sensor.maincoro(loop, mqtt, sensorid, gpio_port),
+		#init(mqtt)
 	]
 	
 	loop.run_until_complete(asyncio.gather(*tasks))#waits untill all tasks are complete
 	loop.close()
+
 
 if __name__ == '__main__':
 	configfile = sys.argv[1] if len(sys.argv) > 1 else "config.ini"
