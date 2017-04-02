@@ -5,7 +5,7 @@ from hbmqtt.mqtt.constants import QOS_0, QOS_1, QOS_2
 from hbmqtt.broker import Broker
 
 def matches(topic, a_filter):
-	return Broker.matches(none, topic, a_filter)
+	return Broker.matches(None, topic, a_filter)
 
 class MQTT():
 	config = {
@@ -14,17 +14,15 @@ class MQTT():
 		'reconnect_retries': 30
 	}
 	
-	def __init__(self, EventLoop, broker, port=1883, use_ssl=False):
-		assert type(use_ssl) is bool
-		assert type(port) is int
+	def __init__(self, EventLoop, broker):
 		self.config = self.config.copy()
 		
 		self.EventLoop = EventLoop
 		self.C = MQTTClient(config=self.config)#, loop=EventLoop)
-		self.broker = 'mqtt%s://%s:%i/' % ("s"*use_ssl, broker, port)
+		self.broker = broker
 		self.lastwill = None
 		
-		#keeping track of subscrptions:
+		#keeping track of subscriptions:
 		self.topics = {}#["topic"] = [callback]
 		self.connected = False
 		

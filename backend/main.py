@@ -4,8 +4,7 @@ from database import main_coro
 
 default_config = """
 [MQTT]
-broker = test.mosquitto.org
-port = default
+broker = mqtt://backend:hunter2@klient.pbsds.net:1883
 certfile = None
 
 [postres]
@@ -20,11 +19,10 @@ password=hunter2
 def main(ini):
 	loop = asyncio.get_event_loop()
 	
-	broker   = ini.get   ("MQTT", "broker")
-	port     = ini.getint("MQTT", "port") if not ini.get("MQTT", "port")=="default" else 1883
-	certfile = ini.get   ("MQTT", "certfile")
+	broker   = ini.get("MQTT", "broker")
+	certfile = ini.get("MQTT", "certfile")
 	
-	mqtt = MQTT(loop, broker, port)
+	mqtt = MQTT(loop, broker)
 	
 	dbHost   = get("postgres", "host")
 	dbName   = get("postgres", "dbname")

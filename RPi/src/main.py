@@ -6,8 +6,7 @@ from mqtt_client import MQTT
 DEBUG = False
 default_config = """
 [MQTT]
-broker = test.mosquitto.org
-port = default
+broker = mqtt://sensor:hunter2@klient.pbsds.net:1883
 certfile = None
 
 [sensor]
@@ -24,11 +23,10 @@ async def init(mqtt):
 def main(ini):
 	loop = asyncio.get_event_loop()
 	
-	broker   = ini.get   ("MQTT", "broker")
-	port     = ini.getint("MQTT", "port") if not ini.get("MQTT", "port")=="default" else 1883
-	certfile = ini.get   ("MQTT", "certfile")
+	broker   = ini.get("MQTT", "broker")
+	certfile = ini.get("MQTT", "certfile")
 	
-	mqtt = MQTT(loop, broker, port)
+	mqtt = MQTT(loop, broker)
 	
 	sensorid = ini.getint("sensor", "ID")
 	gpio_port = ini.getint("sensor", "GPIO_BCM_Port")
