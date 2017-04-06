@@ -24,16 +24,16 @@ def main(ini):
 	
 	mqtt = MQTT(loop, broker)
 	
-	dbHost   = get("postgres", "host")
-	dbName   = get("postgres", "dbname")
-	dbUser   = get("postgres", "user")
-	dbpasswd = get("postgres", "password")
+	dbHost   = ini.get("postgres", "host")
+	dbName   = ini.get("postgres", "dbname")
+	dbUser   = ini.get("postgres", "user")
+	dbPasswd = ini.get("postgres", "password")
 	
 	#run:
 	tasks = [
 		mqtt.main_coro(),
 		mqtt.queue_coro(),
-		main_coro(mqtt, dbHost, dbName, dbUser, dbPasswd),
+		main_coro(mqtt, dbHost, dbName, dbUser, dbPasswd)
 	]
 	
 	loop.run_until_complete(asyncio.gather(*tasks))

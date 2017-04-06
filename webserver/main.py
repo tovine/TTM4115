@@ -2,6 +2,7 @@
 import asyncio, configparser, sys, os, aiopg
 from aiohttp import web
 from server import add_routes
+from database import init_pg, close_pg
 
 
 default_config = """
@@ -15,21 +16,9 @@ password=bestePassordet
 
 
 def main(ini):
-	async def init_pg(app):
-		dbHost   = ini.get("postgres", "host")
-		dbName   = ini.get("postgres", "dbname")
-		dbUser   = ini.get("postgres", "user")
-		dbPasswd = ini.get("postgres", "password")
-		
-		dsn = f"dbname={dbName} user={dbUser} password={dbPasswd} host={dbHost}"
-		pool = await aiopg.create_pool(dsn, loop = app.loop)
-		app["pool"] = pool
-		
-	async def close_pg(app):
-		app['pool'].close()
-		await app['pool'].wait_closed()
-	
 	app = web.Application()
+	app["ini"] = ini
+	
 	app.on_startup.append(init_pg)
 	app.on_cleanup.append(close_pg)
 	

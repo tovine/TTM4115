@@ -1,19 +1,53 @@
 import asyncio, aiopg
 
+#init:
+async def init_pg(app):
+	ini = app["ini"]
+	
+	dbHost   = ini.get("postgres", "host")
+	dbName   = ini.get("postgres", "dbname")
+	dbUser   = ini.get("postgres", "user")
+	dbPasswd = ini.get("postgres", "password")
+	
+	dsn = f"dbname={dbName} user={dbUser} password={dbPasswd} host={dbHost}"
+	
+	pool = await aiopg.create_pool(dsn, loop = app.loop)
+	
+	app["pool"] = pool
+async def close_pg(app):
+	app['pool'].close()
+	await app['pool'].wait_closed()	
 
-
-#ech
-async def template(request):
+#execute a direct query
+async def execute(request, query, fetch=False):
+	app = request.app if hasattr(request, "app") else request
+	
 	async with request.app["pool"].acquire() as conn:
 		async with conn.cursor() as cur:
-			await cur.execute(f"SELECT")
-			ret = await cur.fetchall()
-			return ret
+			await cur.execute(query)
+			if fetch:
+				if type(fetch) is int:
+					ret = await cur.fetchmany(fetch)
+				else:
+					ret = await cur.fetchall()
+				print(ret)
+				return ret
 
-async def get_tags(request):
-	async with request.app["pool"].acquire() as conn:
-		async with conn.cursor() as cur:
-			await cur.execute(f"SELECT * FROM tags")
-			ret = await cur.fetchall()
-			print(ret)
-			return ret
+
+#premade queries
+async def select_tags(request, fetch=True):#(id, name)
+	ret = await execute(request, f"SELECT * FROM tags", fetch)
+	return ret
+
+async def select_toilets(request, fetch=True):#(id, lat, lng, name, poi_id)
+	ret = await execute(request, f"SELECT * FROM toilets ORDER BY id DESC", fetch)
+	return ret
+
+async def select_toilet(request, toiletid):#(id, lat, lng, name, poi_id)
+	ret = await execute(request, f"SELECT * FROM toilets WHERE id={toiletid}", 1)
+	return ret
+
+async def select_toilets_by_tagname(request, tagname, fetch=True):#todo:test
+	ret = await execute(request, f"SELECT * FROM toilets WHERE toilets.id IN (SELECT tags.id FROM tags WHERE tags.name='{tagname}')", fetch)
+	return ret
+
