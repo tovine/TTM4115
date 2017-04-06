@@ -12,8 +12,6 @@ async def GET_index(request):
 
 
 
-
-
 def add_routes(app):
 	#app.router.add_route('POST', '/pv/v1/', handle_v1)
 	app.router.add_get('/', GET_index)

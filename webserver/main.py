@@ -16,21 +16,13 @@ password=bestePassordet
 
 def main(ini):
 	async def init_pg(app):
-		#engine = await aiopg.sa.create_engine(
-		#	database = ini.get("postgres", "dbname"),
-		#	user     = ini.get("postgres", "user"),
-		#	password = ini.get("postgres", "password"),
-		#	host     = ini.get("postgres", "host"),
-		#	loop     = app.loop
-		#)
-		#app['engine'] = engine
 		dbHost   = ini.get("postgres", "host")
 		dbName   = ini.get("postgres", "dbname")
 		dbUser   = ini.get("postgres", "user")
 		dbPasswd = ini.get("postgres", "password")
 		
 		dsn = f"dbname={dbName} user={dbUser} password={dbPasswd} host={dbHost}"
-		pool = await aiopg.create_pool(dsn)
+		pool = await aiopg.create_pool(dsn, loop = app.loop)
 		app["pool"] = pool
 		
 	async def close_pg(app):
