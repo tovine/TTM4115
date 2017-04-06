@@ -8,12 +8,18 @@
 
 </head>
 <body>
-
-	<h1>This is a Heading</h1>
-	<p>This is a paragraph.</p>
 	<div id='mazemap-container'>
 		<script>
-			var map = Maze.map('mazemap-container', {});
+			var map = Maze.map('mazemap-container', { campusloader: false });
+			
+			Maze.Instancer.getCampus(1).then( function (campus) {
+				map.fitBounds(campus.getBounds());
+				campus.addTo(map).setActive().then( function() {
+				// The buildings are now loaded
+						map.setZLevel(1);
+						map.getZLevelControl().show();
+				});		
+			});
 		</script>
 	</div>
 
