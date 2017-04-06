@@ -3,6 +3,7 @@ import asyncio, configparser, sys, os, aiopg
 from aiohttp import web
 from server import add_routes
 from database import init_pg, close_pg
+from mazemap import do_once
 
 
 default_config = """
@@ -20,6 +21,7 @@ def main(ini):
 	app["ini"] = ini
 	
 	app.on_startup.append(init_pg)
+	app.on_startup.append(do_once)
 	app.on_cleanup.append(close_pg)
 	
 	add_routes(app)

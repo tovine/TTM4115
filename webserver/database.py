@@ -22,7 +22,7 @@ async def close_pg(app):
 async def execute(request, query, fetch=False):
 	app = request.app if hasattr(request, "app") else request
 	
-	async with request.app["pool"].acquire() as conn:
+	async with app["pool"].acquire() as conn:
 		async with conn.cursor() as cur:
 			await cur.execute(query)
 			if fetch:
@@ -30,7 +30,7 @@ async def execute(request, query, fetch=False):
 					ret = await cur.fetchmany(fetch)
 				else:
 					ret = await cur.fetchall()
-				print(ret)
+				#print(ret)
 				return ret
 
 
@@ -47,7 +47,22 @@ async def select_toilet(request, toiletid):#(id, lat, lng, name, poi_id)
 	ret = await execute(request, f"SELECT * FROM toilets WHERE id={toiletid}", 1)
 	return ret
 
-async def select_toilets_by_tagname(request, tagname, fetch=True):#todo:test
-	ret = await execute(request, f"SELECT * FROM toilets WHERE toilets.id IN (SELECT tags.id FROM tags WHERE tags.name='{tagname}')", fetch)
+
+async def select_toilet_statuses(request, fetch=True):#(id, lat, lng, name, status, dt)
+	ret = await execute(request, f"SELECT * FROM toilet_status", fetch)
 	return ret
 
+async def select_toilet_status(request, toiletid):#(id, lat, lng, name, status, dt)
+	ret = await execute(request, f"SELECT * FROM toilet_status WHERE id={toiletid}", 1)
+	return ret
+
+async def select_toilets_by_tagname(request, tagname, fetch=True):#todo:test
+	ret = await execute(request, f"SELECT * FROM toilets t WHERE t.id IN (SELECT tags.id FROM tags WHERE tags.name='{tagname}')", fetch)
+	return ret
+	
+async def select_toilet_statuses_by_tagname(request, tagname, fetch=True):#todo:test
+	ret = await execute(request, f"SELECT * FROM toilet_status t WHERE t.id IN (SELECT tags.id FROM tags WHERE tags.name='{tagname}')", fetch)
+	return ret
+
+async def insert_toilet(request, lat, lng, name, poi_ID):
+	await execute(request, f"INSERT INTO toilets (lat, lng, name, poi_id) VALUES ({lat}, {lng}, '{name}', {poi_ID})")
