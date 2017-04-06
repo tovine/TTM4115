@@ -1,12 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Page Title</title>
+	<link rel="stylesheet" href="main.css">
+	<link rel="stylesheet" href="https://api.mazemap.com/js/v1.2.9/mazemap.min.css">
+	<script type='text/javascript' src='https://api.mazemap.com/js/v1.2.9/mazemap.min.js'></script>
+	<title>Page Title</title>
+
 </head>
 <body>
 
-<h1>This is a Heading</h1>
-<p>This is a paragraph.</p>
+	<h1>This is a Heading</h1>
+	<p>This is a paragraph.</p>
+	<div id='mazemap-container'>
+		<script>
+			var map = Maze.map('mazemap-container', {});
+		</script>
+	</div>
 
 </body>
 </html>
