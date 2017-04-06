@@ -8,10 +8,10 @@ broker = mqtt://backend:hunter2@klient.pbsds.net:1883
 certfile = None
 
 [postres]
-host=127.0.0.1
-dbname=aiopg
-user=aiopg
-password=hunter2
+host=klient.pbsds.net
+dbname=shitbase
+user=backend
+password=yolotopkeksuper1337masterrace
 
 """[1:-1]#removes first and last newline
 

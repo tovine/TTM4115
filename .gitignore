@@ -11,3 +11,4 @@ __pycache__/
 //config files:
 RPi/src/config.ini
 backend/config.ini
+webserver/config.ini
