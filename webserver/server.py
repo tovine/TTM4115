@@ -11,37 +11,64 @@ HTML_base = """
 <html>
 <title>Toilet Finder</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
 {text}
+
 </html>
 """[1:-1]
 
-#html decorator:
+#decoratora:
 def handle_html(func):
-	async def ret(*args, **kwargs):		
-		out = await func(*args, **kwargs)
-		out.content_type = "text/html"
+	async def ret(*args, **kwargs):
+		text = await func(*args, **kwargs)
 		
-		out.body
-		
-		out.body = HTML_base.format(text=str(out.body, "utf-8")).encode("utf-8")
+		out = web.Response(
+			content_type = "text/html",
+			text = HTML_base.format(text=text)
+		)
 		
 		return out
 	return ret
-
+def using_base(filename):
+	with open(f"base/{filename}", "r") as f:
+		base = f.read()
+	def decorator(func):
+		async def ret(request):
+			out = await func(request, base)
+			return out
+		return ret
+	return decorator
 
 @handle_html
-async def GET_index(request):
-	d = "test"
-	
-	return web.Response(text=str(d))
+@using_base("index.html")
+async def GET_index(request, base):
+	return base.format(text = "index")
 
 
 @handle_html
 async def GET_test(request):
 	#session = await get_session(request)
 	out = await mazemap.test(request)
+	return out
+
+
+@handle_html
+async def GET_mazemap(request):
+	#session = await get_session(request)
+	#request.query
 	
-	return web.Response(text=out)
+	from random import choice
+	toilets = await database.select_toilets(request)
+	
+	red, blue = [], []
+	for i in toilets: choice((red, blue)).append(i)
+	
+	out  = "%s\n%s" % (
+		mazemap.make_marker_chubs(red, color = "red"),
+		mazemap.make_marker_chubs(blue, color = "blue")
+	)
+	
+	return mazemap.JS_skeleton.format(code = out)
 
 
 
@@ -58,7 +85,15 @@ def add_routes(app):
 	app.router.add_get('/',      GET_index)
 	app.router.add_get('/index', GET_index)
 	
+	app.router.add_get('/mazemap', GET_mazemap)
+	
 	app.router.add_get('/mazetest', GET_test)
+	
+	app.router.add_static(
+		'/static/',
+		path='static',
+		name='static'
+	)
 	
 	fernet_key = fernet.Fernet.generate_key()
 	secret_key = base64.urlsafe_b64decode(fernet_key)

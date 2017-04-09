@@ -33,7 +33,6 @@ async def execute(request, query, fetch=False):
 				#print(ret)
 				return ret
 
-
 #premade queries
 async def select_tags(request, fetch=True):#(id, name)
 	ret = await execute(request, f"SELECT * FROM tags", fetch)
@@ -56,13 +55,18 @@ async def select_toilet_status(request, toiletid):#(id, lat, lng, name, status, 
 	ret = await execute(request, f"SELECT * FROM toilet_status WHERE id={toiletid}", 1)
 	return ret
 
-async def select_toilets_by_tagname(request, tagname, fetch=True):#todo:test
-	ret = await execute(request, f"SELECT * FROM toilets t WHERE t.id IN (SELECT tags.id FROM tags WHERE tags.name='{tagname}')", fetch)
+async def select_toilets_by_tagnames(request, tagnames, fetch=True):#todo:test
+	tags = ", ".join(map(repr, tagnames))
+	ret = await execute(request, f"SELECT * FROM toilets t WHERE t.id IN (SELECT tags.id FROM tags WHERE tags.name IN ({tags}))", fetch)
 	return ret
 	
-async def select_toilet_statuses_by_tagname(request, tagname, fetch=True):#todo:test
-	ret = await execute(request, f"SELECT * FROM toilet_status t WHERE t.id IN (SELECT tags.id FROM tags WHERE tags.name='{tagname}')", fetch)
+async def select_toilet_statuses_by_tagname(request, tagnames, fetch=True):#todo:test
+	tags = ", ".join(map(repr, tagnames))
+	ret = await execute(request, f"SELECT * FROM toilet_status t WHERE t.id IN (SELECT tags.id FROM tags WHERE tags.name IN ({tagname}))", fetch)
 	return ret
 
 async def insert_toilet(request, lat, lng, name, poi_ID):
 	await execute(request, f"INSERT INTO toilets (lat, lng, name, poi_id) VALUES ({lat}, {lng}, '{name}', {poi_ID})")
+
+
+
