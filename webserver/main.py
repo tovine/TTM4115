@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
-import asyncio, configparser, sys, os, aiopg
+import asyncio, configparser, sys, os, aiopg, base64
 from aiohttp import web
-from server import add_routes
+from server import add_routes, create_session_secret
 from database import init_pg, close_pg
 from mazemap import do_once
 
 
-default_config = """
+default_config = f"""
 [postgres]
 host=klient.pbsds.net
 dbname=shitbase
 user=frontend
 password=bestePassordet
 
+[sessions]
+cookie_secret = {base64.b64encode(create_session_secret()).decode('UTF-8')}
+session_idle_timeout = 1200
 """[1:-1]#removes first and last newline
 
 
@@ -24,7 +27,7 @@ def main(ini):
 	app.on_startup.append(do_once)
 	app.on_cleanup.append(close_pg)
 	
-	add_routes(app)
+	add_routes(app, base64.b64decode(ini.get("sessions", "cookie_secret").encode("UTF-8")))#ew
 	
 	web.run_app(app)
 

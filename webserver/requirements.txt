@@ -2,3 +2,4 @@ aiohttp
 aiohttp_session
 aiopg
 cryptography
+bcrypt

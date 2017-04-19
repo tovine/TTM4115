@@ -68,5 +68,13 @@ async def select_toilet_statuses_by_tagname(request, tagnames, fetch=True):#todo
 async def insert_toilet(request, lat, lng, name, poi_ID):
 	await execute(request, f"INSERT INTO toilets (lat, lng, name, poi_id) VALUES ({lat}, {lng}, '{name}', {poi_ID})")
 
+async def insert_user(request, uname, bcrypt_hash, admin=False):
+	admin = "TRUE" if admin else "FALSE"
+	await execute(request, f"INSERT INTO users (uname, bcrypt_hash, admin) VALUES ('{uname}', '{bcrypt_hash}', {admin})")
 
+async def update_user_password(request, uname, bcrypt_hash):
+	await execute(request, f"UPDATE users SET bcrypt_hash='{bcrypt_hash}' WHERE uname='{uname}'")
 
+async def select_user(request, uname):
+	ret = await execute(request, f"SELECT * FROM users WHERE uname = '{uname}'", 1)
+	return ret
