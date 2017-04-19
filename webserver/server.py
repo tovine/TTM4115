@@ -71,7 +71,7 @@ async def GET_index(request, base):
 	return base.format(text = text)
 
 
-#login
+#login and registration
 @handle_html
 @using_base("loginform.html")
 async def GET_login(request, base):
@@ -108,6 +108,9 @@ async def POST_login(request):
 			
 			return "Login successfull!"
 		elif data["action"] == "register" and "psw2" in data:
+			if not is_valid_username(uname):
+				return f"Error: invalid username: <i>{uname}</i><br>\nWe only allow characters from the english alphabet plus digits"
+			
 			if psw != data["psw2"]:
 				return "Error: mismatching passwords!"
 			
@@ -129,7 +132,6 @@ async def POST_login(request):
 			
 	
 	return f"Invalid login POST:<br/><i>{data.items()}</i><br>\nAlready logged in: {'uname' in session}"
-
 
 #maps:
 @handle_html
@@ -199,7 +201,7 @@ async def GET_test(request):
 
 def is_valid_username(uname):
 	for i in uname:
-		if i not in string.ascii_letters or i not in string.digits:
+		if i not in string.ascii_letters and i not in string.digits:
 			return False
 	return True
 
