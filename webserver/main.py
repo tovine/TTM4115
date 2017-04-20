@@ -16,6 +16,7 @@ password=bestePassordet
 [sessions]
 cookie_secret = {base64.b64encode(create_session_secret()).decode('UTF-8')}
 session_idle_timeout = 1200
+cached_page_timeout = 10
 """[1:-1]#removes first and last newline
 
 

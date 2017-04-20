@@ -20,6 +20,7 @@ HTML_base = """
 
 #decorators:
 def handle_html(func):
+	#handle_html.timeout
 	async def ret(*args, **kwargs):
 		session = await get_session(args[0])
 		
@@ -53,19 +54,32 @@ def require_login(func):
 	async def ret(*args, **kwargs):
 		session = await get_session(args[0])
 		if "uname" not in session:
+			session["return_after_login"] = args[0].path_qs
 			return "You must be <a href=\"/login\">logged in</a> to access this page."
 		out = await func(*args, **kwargs)
 		return out
+	return ret
+def cache_page(func):#doesn't account for query parameters or different users
+	cache = [None, 0]
+	#cache_page.timeout
+	async def ret(*args, **kwargs):
+		if time.time() - cache[1] > cache_page.timeout:
+			cache[0] = await func(*args, **kwargs)
+			cache[1] = time.time()
+		return cache[0]
 	return ret
 
 #index
 @handle_html
 @using_base("index.html")
+@cache_page
 async def GET_index(request, base):
 	text = "\n".join((
-		"<a href=\"/mazetest\">/mazetest</a><br/>",
+		"<a href=\"/mapmaker\">/mapmaker</a><br/>",
+		"<a href=\"/map\">/map</a><br/>",
 		"<a href=\"/login\">/login</a><br/>",
 		"<a href=\"/settings\">/settings</a><br/>",
+		"<a href=\"/mazetest\">/mazetest</a><br/>",
 		"<a href=\"http://disco.fleo.se/TEAM%2010%20FTW!!!\">Team 10 FTW</a>"
 	))
 	return base.format(text = text)
@@ -106,7 +120,12 @@ async def POST_login(request):
 			if "keep" in data and data["keep"] == "logged_in":
 				session["ignore_timeout"] = True
 			
-			return "Login successfull!"
+			#success
+			out = "Login successfull!"
+			if "return_after_login" in session:
+				out += f"<br/>\n<a href=\"{session['return_after_login']}\">Go back</a>"
+				del session["return_after_login"]
+			return out
 		elif data["action"] == "register" and "psw2" in data:
 			if not is_valid_username(uname):
 				return f"Error: invalid username: <i>{uname}</i><br>\nWe only allow characters from the english alphabet plus digits"
@@ -135,18 +154,35 @@ async def POST_login(request):
 
 #maps:
 @handle_html
-async def GET_mazemap(request):
+@using_base("mapmaker.html")
+@cache_page
+async def GET_mapmaker(request, base):
+	tags = await database.select_tags(request)
+	tag_checkboxes = "\n\t".join((f"<input type=\"checkbox\" name=\"tag\" value=\"{ID}\"> {label}<br>" for ID, label in tags))
+	return base.format(tags=tag_checkboxes)
+
+@handle_html
+async def GET_map(request):
 	#session = await get_session(request)
-	#request.query
+	tags = []
+	mode = "all"
+	for key, i in request.query.items():
+		if key == "mode":
+			mode = i
+		elif key == "tag":
+			tags.append(i)
 	
-	from random import choice
-	toilets = await database.select_toilets(request)
+	if not tags:
+		toilets = await database.select_toilet_statuses(request)
+	else:
+		toilets = await database.select_toilet_statuses_by_tags(request, tags)
 	
 	red, blue = [], []
-	for i in toilets: choice((red, blue)).append(i)
+	for ID, lat, lng, name, status, dt in toilets:
+		(blue if status else red).append((ID, lat, lng, name, None))
 	
-	out  = "%s\n%s" % (
-		mazemap.make_marker_chubs(red, color = "red"),
+	out = "%s\n%s" % (
+		mazemap.make_marker_chubs(red, color = "red") if mode == "all" else "",
 		mazemap.make_marker_chubs(blue, color = "blue")
 	)
 	
@@ -198,7 +234,7 @@ async def GET_test(request):
 	out = await mazemap.test(request)
 	return out
 
-
+#=====================================================================
 def is_valid_username(uname):
 	for i in uname:
 		if i not in string.ascii_letters and i not in string.digits:
@@ -211,6 +247,7 @@ def create_session_secret():
 
 def add_routes(app, secret_key):
 	handle_html.timeout = app["ini"].getint("sessions", "session_idle_timeout")
+	cache_page.timeout  = app["ini"].getint("sessions", "cached_page_timeout")
 	
 	#app.router.add_route('POST', '/pv/v1/', handle_v1)
 	app.router.add_get('/',      GET_index)
@@ -222,7 +259,8 @@ def add_routes(app, secret_key):
 	app.router.add_get ('/settings', GET_settings)
 	app.router.add_post('/settings', POST_settings)
 	
-	app.router.add_get('/mazemap', GET_mazemap)
+	app.router.add_get('/mapmaker', GET_mapmaker)
+	app.router.add_get('/map', GET_map)
 	
 	app.router.add_get('/mazetest', GET_test)
 	

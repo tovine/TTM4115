@@ -1,0 +1,12 @@
+<form action="/map" method="get">
+	<label><b>Mode:</b></label><br/>
+	<input type="radio" name="mode" value="all" checked> Show all toilets<br>
+	<input type="radio" name="mode" value="available"> Show only available toilets<br>
+	<br/>
+	
+	<label><b>Tags: (checking none shows all instead)</b></label><br/>
+	{tags}
+	<br/>
+	
+	<button type="submit">Show</button>
+</form>
