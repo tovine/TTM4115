@@ -20,6 +20,9 @@ async def close_pg(app):
 
 #execute a direct query
 async def execute(request, query, fetch=False):
+	if ";" in query:
+		raise Exception("Multible queries caught: %s" % query)
+	
 	app = request.app if hasattr(request, "app") else request
 	
 	async with app["pool"].acquire() as conn:

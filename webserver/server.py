@@ -170,7 +170,7 @@ async def GET_map(request):
 		if key == "mode":
 			mode = i
 		elif key == "tag":
-			tags.append(i)
+			tags.append(int(i))
 	
 	if not tags:
 		toilets = await database.select_toilet_statuses(request)
