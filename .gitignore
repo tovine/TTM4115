@@ -12,3 +12,6 @@ __pycache__/
 RPi/src/config.ini
 backend/config.ini
 webserver/config.ini
+
+//temporary files used when scraping mazemap
+*.json

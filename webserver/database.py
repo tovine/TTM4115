@@ -83,6 +83,6 @@ async def insert_user(request, uname, bcrypt_hash, admin=False):
 
 async def update_user_password(request, uname, bcrypt_hash):
 	await execute(request, "UPDATE users SET bcrypt_hash=%s WHERE uname=%s", params=(bcrypt_hash, uname))
-async def select_user(request, uname):
+async def select_user(request, uname):#[i]=(id, uname, bcrypt_hash, admin?)
 	ret = await execute(request, "SELECT * FROM users WHERE uname = %s", 1, params=(uname,))
 	return ret

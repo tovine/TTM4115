@@ -9,13 +9,10 @@ import mazemap
 
 HTML_base = """
 <!doctype html>
-<html>
 <title>Toilet Finder</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 
 {text}
-
-</html>
 """[1:-1]
 
 #decorators:
@@ -45,9 +42,8 @@ def using_base(filename):
 	with open(f"base/{filename}", "r") as f:
 		base = f.read()
 	def decorator(func):
-		async def ret(request):
-			out = await func(request, base)
-			return out
+		async def ret(*args, **kwargs):
+			return await func(*args, base, **kwargs)
 		return ret
 	return decorator
 def require_login(func):
@@ -56,8 +52,17 @@ def require_login(func):
 		if "uname" not in session:
 			session["return_after_login"] = args[0].path_qs
 			return "You must be <a href=\"/login\">logged in</a> to access this page."
-		out = await func(*args, **kwargs)
-		return out
+		return await func(*args, **kwargs)
+	return ret
+def require_admin(func):#handles login aswell
+	async def ret(*args, **kwargs):
+		session = await get_session(args[0])
+		if "uname" not in session:
+			session["return_after_login"] = args[0].path_qs
+			return "You must be <a href=\"/login\">logged in</a> to access this page."
+		if "is_admin" not in session:
+			return "You must have admin privileges to access this page."
+		return await func(*args, **kwargs)
 	return ret
 def cache_page(func):#doesn't account for query parameters or different users
 	cache = [None, 0]
@@ -79,6 +84,7 @@ async def GET_index(request, base):
 		"<a href=\"/map\">/map</a><br/>",
 		"<a href=\"/login\">/login</a><br/>",
 		"<a href=\"/settings\">/settings</a><br/>",
+		"<a href=\"/admin\">/admin</a><br/>",
 		"<a href=\"/mazetest\">/mazetest</a><br/>",
 		"<a href=\"http://disco.fleo.se/TEAM%2010%20FTW!!!\">Team 10 FTW</a>"
 	))
@@ -116,6 +122,9 @@ async def POST_login(request):
 			
 			session["uname"] = uname
 			session["login_time"] = time.time()
+			
+			if entry[0][3]:
+				session["is_admin"] = True
 			
 			if "keep" in data and data["keep"] == "logged_in":
 				session["ignore_timeout"] = True
@@ -165,17 +174,23 @@ async def GET_mapmaker(request, base):
 async def GET_map(request):
 	#session = await get_session(request)
 	tags = []
+	ids = []
 	mode = "all"
 	for key, i in request.query.items():
 		if key == "mode":
 			mode = i
 		elif key == "tag":
 			tags.append(int(i))
+		elif key=="id":
+			ids.append(int(i))
 	
 	if not tags:
 		toilets = await database.select_toilet_statuses(request)
 	else:
 		toilets = await database.select_toilet_statuses_by_tags(request, tags)
+	
+	if ids:
+		toilets = tuple(i for i in toilets if i[0] in ids)
 	
 	red, blue = [], []
 	for ID, lat, lng, name, status, dt in toilets:
@@ -193,8 +208,10 @@ async def GET_map(request):
 @require_login
 @using_base("settings.html")
 async def GET_settings(request, base):
+	tags = await database.select_tags(request)
+	tag_checkboxes = "\n\t".join((f"<input type=\"checkbox\" name=\"tag\" value=\"{ID}\"> {label}<br>" for ID, label in tags))
 	
-	return base
+	return base.format(email="{email}", tags=tag_checkboxes)
 
 @handle_html
 @require_login
@@ -227,6 +244,22 @@ async def POST_settings(request):
 	
 	return f"Invalid POST request: <i>{data.items()}</i>"
 
+@handle_html
+@require_admin
+@using_base("admin.html")
+async def GET_admin(request, base):
+	tags = await database.select_tags(request)
+	tag_checkboxes = "\n\t\t".join((f"<input type=\"checkbox\" name=\"tag\" value=\"{ID}\"> {label}<br>" for ID, label in tags))
+	
+	toilets = await database.select_toilets(request)
+	toilet_checkboxes = "\n\t\t".join((f"<input type=\"checkbox\" name=\"toilet\" value=\"{ID}\"> <b>{name}</b> - <a href=\"/map?id={ID}\" target=\"_blank\">show</a><br>" for ID, lat, lng, name, poi_id in toilets))
+	
+	return base.format(tags=tag_checkboxes, toilets=toilet_checkboxes)
+
+@handle_html
+@require_admin
+async def POST_admin(request):
+	return "Not yet implemented"
 
 @handle_html
 async def GET_test(request):
@@ -234,7 +267,7 @@ async def GET_test(request):
 	out = await mazemap.test(request)
 	return out
 
-#=====================================================================
+#===============================================================================
 def is_valid_username(uname):
 	for i in uname:
 		if i not in string.ascii_letters and i not in string.digits:
@@ -261,6 +294,9 @@ def add_routes(app, secret_key):
 	
 	app.router.add_get('/mapmaker', GET_mapmaker)
 	app.router.add_get('/map', GET_map)
+	
+	app.router.add_get ('/admin', GET_admin)
+	app.router.add_post('/admin', POST_admin)
 	
 	app.router.add_get('/mazetest', GET_test)
 	
