@@ -90,7 +90,6 @@ async def GET_index(request, base):
 	))
 	return base.format(text = text)
 
-
 #login and registration
 @handle_html
 @using_base("loginform.html")
@@ -163,11 +162,12 @@ async def POST_login(request):
 
 #maps:
 @handle_html
+@using_base("checkbox_tag.html")
 @using_base("mapmaker.html")
 @cache_page
-async def GET_mapmaker(request, base):
+async def GET_mapmaker(request, base_tag, base):
 	tags = await database.select_tags(request)
-	tag_checkboxes = "\n\t".join((f"<input type=\"checkbox\" name=\"tag\" value=\"{ID}\"> {label}<br>" for ID, label in tags))
+	tag_checkboxes = "\n\t".join((base_tag.format(ID=ID, label=label) for ID, label in tags))
 	return base.format(tags=tag_checkboxes)
 
 @handle_html
@@ -206,10 +206,11 @@ async def GET_map(request):
 #menus:
 @handle_html
 @require_login
+@using_base("checkbox_tag.html")
 @using_base("settings.html")
-async def GET_settings(request, base):
+async def GET_settings(request, base_tag, base):
 	tags = await database.select_tags(request)
-	tag_checkboxes = "\n\t".join((f"<input type=\"checkbox\" name=\"tag\" value=\"{ID}\"> {label}<br>" for ID, label in tags))
+	tag_checkboxes = "\n\t".join((base_tag.format(ID=ID, label=label) for ID, label in tags))
 	
 	return base.format(email="{email}", tags=tag_checkboxes)
 
@@ -246,19 +247,69 @@ async def POST_settings(request):
 
 @handle_html
 @require_admin
+@using_base("checkbox_tag.html")
+@using_base("checkbox_toilet.html")
 @using_base("admin.html")
-async def GET_admin(request, base):
+async def GET_admin(request, base_tag, base_toilet, base):
 	tags = await database.select_tags(request)
-	tag_checkboxes = "\n\t\t".join((f"<input type=\"checkbox\" name=\"tag\" value=\"{ID}\"> {label}<br>" for ID, label in tags))
+	tag_checkboxes = "\n\t\t".join((base_tag.format(ID=ID, label=label) for ID, label in tags))
 	
 	toilets = await database.select_toilets(request)
-	toilet_checkboxes = "\n\t\t".join((f"<input type=\"checkbox\" name=\"toilet\" value=\"{ID}\"> <b>{name}</b> - <a href=\"/map?id={ID}\" target=\"_blank\">show</a><br>" for ID, lat, lng, name, poi_id in toilets))
+	toilet_checkboxes = "\n\t\t".join((base_toilet.format(**locals()) for ID, lat, lng, name, poi_id in toilets))
 	
 	return base.format(tags=tag_checkboxes, toilets=toilet_checkboxes)
 
 @handle_html
 @require_admin
-async def POST_admin(request):
+async def POST_admin(request):#todo: add/remove tag relations
+	data = await request.post()
+	if "action" in data:
+		if data["action"] == "add_toilet":
+			if not set(("lat", "lng", "name", "poi_id")).issubset(data.keys()):
+				return "Missing arguments"
+			try:
+				lat = float(data["lat"])
+				lng = float(data["lng"])
+				name = str(data["name"])
+				poi_id = int(data["poi_id"])
+			except ValueError:
+				return "Invalid parametertypes"
+			
+			ret = await database.insert_toilet(request, lat, lng, name, poi_id)
+			
+			return f"Success! See it <a href=\"/map?id={ret[0][0]}\">here</a>"
+		elif data["action"] == "remove_toilets":
+			if "toilet" not in data:
+				return "Missing arguments"
+			toilets = []
+			for key, val in data.items():
+				if key=="toilet":
+					toilets.append(int(val))
+			
+			await database.delete_toilets(request, toilets)
+			return "Success"
+		elif data["action"] == "add_tag":
+			if "name" not in data:
+				return "Missing arguments"
+			name = str(data["name"])
+			
+			await database.insert_tag(request, name)
+			return "Success"
+		elif data["action"] == "remove_tags":
+			if "tag" not in data:
+				return "Missing arguments"
+			tags = []
+			for key, val in data.items():
+				if key=="tag":
+					tags.append(int(val))
+			
+			await database.delete_tags(request, tags)
+			return "Success"
+		elif data["action"] == "add_tag_relation":
+			pass
+		elif data["action"] == "remove_tag_relation":
+			pass
+	
 	return "Not yet implemented"
 
 @handle_html

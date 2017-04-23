@@ -40,42 +40,43 @@ async def execute(request, query, fetch=False, params=None):
 
 #premade queries
 async def select_tags(request, fetch=True):#(id, name)
-	ret = await execute(request, "SELECT * FROM tags", fetch)
-	return ret
+	return await execute(request, "SELECT * FROM tags", fetch)
 
 async def select_toilets(request, fetch=True):#(id, lat, lng, name, poi_id)
-	ret = await execute(request, "SELECT * FROM toilets ORDER BY id DESC", fetch)
-	return ret
+	return await execute(request, "SELECT * FROM toilets ORDER BY id DESC", fetch)
 
 async def select_toilet(request, toiletid):#(id, lat, lng, name, poi_id)
-	ret = await execute(request, f"SELECT * FROM toilets WHERE id={int(toiletid)}", 1)
-	return ret
+	return await execute(request, f"SELECT * FROM toilets WHERE id={int(toiletid)}", 1)
 
 async def select_toilet_statuses(request, fetch=True):#(id, lat, lng, name, status, dt)
-	ret = await execute(request, "SELECT * FROM toilet_status", fetch)
-	return ret
+	return await execute(request, "SELECT * FROM toilet_status", fetch)
 
 async def select_toilet_status(request, toiletid):#(id, lat, lng, name, status, dt)
-	ret = await execute(request, f"SELECT * FROM toilet_status WHERE id={int(toiletid)}", 1)
-	return ret
+	return await execute(request, f"SELECT * FROM toilet_status WHERE id={int(toiletid)}", 1)
 
 async def select_toilets_by_tagnames(request, tagnames, fetch=True):#todo:test
 	tagnames = tuple(map(str, tags))
-	ret = await execute(request,"SELECT * FROM toilets as s WHERE s.id IN (SELECT t.toilet FROM toilet_tags as t JOIN tags ON tags.id = t.tag WHERE tags.name IN %s)", fetch, params=(tagnames,))
-	return ret
+	return await execute(request,"SELECT * FROM toilets as s WHERE s.id IN (SELECT t.toilet FROM toilet_tags as t JOIN tags ON tags.id = t.tag WHERE tags.name IN %s)", fetch, params=(tagnames,))
 	
 async def select_toilet_statuses_by_tagnames(request, tagnames, fetch=True):#todo:test
 	tagnames = tuple(map(int, tags))
-	ret = await execute(request,"SELECT * FROM toilet_status as s WHERE s.id IN (SELECT t.toilet FROM toilet_tags as t JOIN tags ON tags.id = t.tag WHERE tags.name IN %s)", fetch, params=(tagnames,))
-	return ret
+	return await execute(request,"SELECT * FROM toilet_status as s WHERE s.id IN (SELECT t.toilet FROM toilet_tags as t JOIN tags ON tags.id = t.tag WHERE tags.name IN %s)", fetch, params=(tagnames,))
 	
 async def select_toilet_statuses_by_tags(request, tags, fetch=True):#todo:test
 	tags = tuple(map(int, tags))
-	ret = await execute(request,"SELECT * FROM toilet_status as s WHERE s.id IN (SELECT t.toilet FROM toilet_tags AS t WHERE t.tag IN %s)", fetch, params=(tags,))
-	return ret
+	return await execute(request,"SELECT * FROM toilet_status as s WHERE s.id IN (SELECT t.toilet FROM toilet_tags AS t WHERE t.tag IN %s)", fetch, params=(tags,))
 
 async def insert_toilet(request, lat, lng, name, poi_ID):
-	await execute(request, "INSERT INTO toilets (lat, lng, name, poi_id) VALUES (%s, %s, %s, %s)", params=(lat, lng, name, poi_ID))
+	return await execute(request, "INSERT INTO toilets (lat, lng, name, poi_id) VALUES (%s, %s, %s, %s) RETURNING id", 1, params=(lat, lng, name, poi_ID))
+
+async def delete_toilets(request, IDs):
+	await execute(request, "DELETE FROM toilets WHERE id in %s", params=(tuple(IDs),))
+
+async def insert_tag(request, name):
+	return await execute(request, "INSERT INTO tags (name) VALUES (%s) RETURNING id", 1, params=(name,))
+
+async def delete_tags(request, tags):
+	await execute(request, "DELETE FROM tags WHERE id in %s", params=(tuple(tags),))
 
 async def insert_user(request, uname, bcrypt_hash, admin=False):
 	admin = bool(admin)
@@ -84,5 +85,5 @@ async def insert_user(request, uname, bcrypt_hash, admin=False):
 async def update_user_password(request, uname, bcrypt_hash):
 	await execute(request, "UPDATE users SET bcrypt_hash=%s WHERE uname=%s", params=(bcrypt_hash, uname))
 async def select_user(request, uname):#[i]=(id, uname, bcrypt_hash, admin?)
-	ret = await execute(request, "SELECT * FROM users WHERE uname = %s", 1, params=(uname,))
-	return ret
+	return await execute(request, "SELECT * FROM users WHERE uname = %s", 1, params=(uname,))
+	
