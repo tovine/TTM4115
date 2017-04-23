@@ -1,0 +1,116 @@
+<h1>Be carefull when using these functions!</h1>
+
+<script src="/static/scripts.js"></script>
+
+<button onclick='toggle_visibity("f1");'>Add toilet</button>
+<div id="f1" style="display: none">
+	<hr>
+	<label><b>Add toilet:</b></label><br><br>
+	
+	<form action="/admin" method="post">
+		<input type="hidden" name="action" value="add_toilet">
+		
+		<label><b>Latitude</b></label><br>
+		<input type="text" placeholder="Enter latitude here" name="lat" required><br>
+		<br>
+		<label><b>Longitude</b></label><br>
+		<input type="text" placeholder="Enter longitude here" name="lng" required><br>
+		<br>
+		<label><b>Name</b></label><br>
+		<input type="text" placeholder="Enter name here" name="name" required><br>
+		<br>
+		<label><b>Point of Interest ID (mazemap)</b></label><br>
+		<input type="text" placeholder="Enter poi here" name="poi_id" required><br>
+		<br>
+		
+		<button type="submit">Submit</button>
+	</form>
+	
+	<hr>
+</div>
+
+<br>
+
+<button onclick='toggle_visibity("f1.5");'>Remove toilets</button>
+<div id="f1.5" style="display: none">
+	<hr>
+	<label><b>Remove toilets:</b></label><br><br>
+	
+	<form action="/admin" method="post">
+		<input type="hidden" name="action" value="remove_toilets">
+		
+		<label><b>Toilets</b></label><br>
+		{toilets}
+		<br>
+		
+		<button type="submit">Submit</button>
+	</form>
+	
+	<hr>
+</div>
+
+<br>
+
+<button onclick='toggle_visibity("f2");'>Add tag</button>
+<div id="f2" style="display: none">
+	<hr>
+	<label><b>Add tag:</b></label><br><br>
+	
+	<form action="/admin" method="post">
+		<input type="hidden" name="action" value="add_tag">
+		
+		<label><b>Tag name:</b></label><br>
+		<input type="text" placeholder="Enter tag name here" name="name" required><br>
+		<br>
+		
+		<button type="submit">Submit</button>
+	</form>
+	
+	<hr>
+</div>
+
+<br>
+
+<button onclick='toggle_visibity("f3");'>Remove tags</button>
+<div id="f3" style="display: none">
+	<hr>
+	<label><b>Remove tags:</b></label><br><br>
+	
+	<form action="/admin" method="post">
+		<input type="hidden" name="action" value="remove_tags">
+		
+		<label><b>Tags:</b></label><br>
+		{tags}
+		<br>
+		
+		<button type="submit">Submit</button>
+	</form>
+	
+	<hr>
+</div>
+
+<br>
+
+<button onclick='toggle_visibity("f4");'>Add toilet-tag relations</button>
+<div id="f4" style="display: none">
+	<hr>
+	<label><b>Add toilet-tag relations:</b></label><br>
+	<a href="/mapmaker" target="_blank">mapmaker</a><br>
+	<br>
+	
+	<form action="/admin" method="post">
+		<input type="hidden" name="action" value="add_tag_relation">
+		
+		<label><b>Attach tags:</b></label><br>
+		{tags}
+		<br>
+		
+		<label><b>Attach to these toilets:</b></label><br>
+		{toilets}
+		<br>
+		
+		<button type="submit">Submit</button> Not yet implemented
+	</form>
+	
+	<hr>
+</div>

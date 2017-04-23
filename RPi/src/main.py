@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys, os, asyncio, configparser
 from mqtt_client import MQTT
-#import sensor
+import sensor
 
 DEBUG = False
 default_config = """
@@ -28,7 +28,7 @@ def main(ini):
 	
 	mqtt = MQTT(loop, broker)
 	
-	sensorid = ini.getint("sensor", "ID")
+	sensorid  = ini.getint("sensor", "ID")
 	gpio_port = ini.getint("sensor", "GPIO_BCM_Port")
 	
 	#run:

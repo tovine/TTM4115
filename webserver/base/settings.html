@@ -1,0 +1,38 @@
+<script src="/static/scripts.js"></script>
+
+<label><b>User information: (not implemented in database)</b></label><br><br>
+<form action="/settings" method="post">
+	<input type="hidden" name="action" value="change_profile">
+	
+	<label><b>Email</b></label><br>
+	<input type="text" name="cpsw" value="{email}" required><br>
+	<br>
+	
+	<label><b>Tags</b></label><br>
+	{tags}
+	<br>
+	
+	<button type="submit">Submit changes</button>
+</form>
+
+<hr>
+
+<button id="passwordbutton" onclick='toggle_visibity("passwordform");toggle_visibity("passwordbutton");'>Change Password</button>
+<div id="passwordform" style="display: none">
+	<label><b>Change Password:</b></label><br><br>
+	
+	<form action="/settings" method="post">
+		<input type="hidden" name="action" value="change_password">
+		
+		<label><b>Enter your current password</b></label><br>
+		<input type="password" placeholder="Enter current password" name="cpsw" required><br>
+		<br>
+		
+		<label><b>Enter your new password</b></label><br>
+		<input type="password" placeholder="Enter password" name="psw" required><br>
+		<input type="password" placeholder="Re-enter password" name="psw2" required><br>
+		<br>
+		
+		<button type="submit">Change password</button>
+	</form>
+</div>

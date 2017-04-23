@@ -6,11 +6,13 @@ except RuntimeError:
 	import sys
 	sys.exit(1)
 
+
 sensor_topic = "door/%i/sensor"
 state_topic = "door/%i/state"
 states = {True:"open", False:"closed"}
 DEAD = "dead"
 ALIVE = "alive"
+
 
 #actually a coroutine
 def maincoro(eventloop, mqtt, ID, gpio_port):

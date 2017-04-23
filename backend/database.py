@@ -1,13 +1,17 @@
 import asyncio, aiopg
+from time import strftime
 from MQTT import QOS_1
 
 #queries:
 async def update_door_state(conn, topic, data):#open or closed
-	ID = int(topic.split("/")[1])
-	state = bool(data)
+	toiletID = int(topic.split("/")[1])
+	state = int(data)
+	time = strftime("TIMESTAMP WITH TIME ZONE '%Y-%m-%d %H:%M:%S+01'")
 	
 	async with conn.cursor() as cur:
-		await cur.execute(f"UPDATE doors SET state = {state} WHERE id = {ID}")
+		#await cur.execute(f"UPDATE doors SET state = {state} WHERE id = {ID}")
+		await cur.execute(f"INSERT INTO status (toilet, dt, status)"
+						+ f"VALUES ({toiletID}, {time}, {state})")
 		#await ret = cur.fetchall()
 
 
