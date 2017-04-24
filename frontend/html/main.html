@@ -5,20 +5,18 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
-	<link rel="stylesheet" href="main.css">
+	<link rel="stylesheet" href="../css/main.css">
 	<link rel="stylesheet" href="https://api.mazemap.com/js/v1.2.9/mazemap.min.css">
 	<script type='text/javascript' src='https://api.mazemap.com/js/v1.2.9/mazemap.min.js'></script>
 	<title>Toilet Application</title>
 
 </head>
 <body>
-
   <div class="container">
 	
       
   <div class="navbar-header">
           
-
           <a class="navbar-brand" href="#">Name</a>
         
 		
@@ -47,19 +45,10 @@
 						campus.addPoiCategory(9);    // 9 = WC
 				});		
 			});
-			
-			map.on('click', function(ev) {
-				Maze.Instancer.getPoiAt(ev.latlng, map.getZLevel()).then(function(marker) {
-				if (marker) {
-					marker.bindPopup(marker.properties.name).addTo(map).openPopup();
-				} else {
-					map.openPopup('Admin: Add toilet here?', ev.latlng);
-				}
-			});
-			});
+            
 		</script>
 	</div>
-
+	
     <div class="buttons">      
        
 	   <button id="signinbutton" class="btn1" >Sign in</button>
