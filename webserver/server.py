@@ -7,6 +7,8 @@ from psycopg2 import IntegrityError
 import database
 import mazemap
 
+#globals:
+DOCACHE = True
 HTML_base = """
 <!doctype html>
 {text}
@@ -14,7 +16,7 @@ HTML_base = """
 
 #decorators:
 def handle_html(func):
-	#handle_html.timeout
+	#handle_html.timeout is set by add_routes()
 	async def ret(*args, **kwargs):
 		session = await get_session(args[0])
 		
@@ -39,8 +41,13 @@ def using_base(filename):
 	with open(f"base/{filename}", "r") as f:
 		base = f.read()
 	def decorator(func):
+		global DOCACHE
 		async def ret(*args, **kwargs):
-			return await func(*args, base, **kwargs)
+			if not DOCACHE:
+				with open(f"base/{filename}", "r") as f: 
+					return await func(*args, f.read(), **kwargs)
+			else:
+				return await func(*args, base, **kwargs)
 		return ret
 	return decorator
 def require_login(func):
@@ -62,9 +69,12 @@ def require_admin(func):#handles login aswell
 		return await func(*args, **kwargs)
 	return ret
 def cache_page(func):#doesn't account for query parameters or different users
+	global DOCACHE
 	cache = [None, 0]
-	#cache_page.timeout
+	#cache_page.timeout is set by add_routes()
 	async def ret(*args, **kwargs):
+		if not DOCACHE:
+			return await func(*args, **kwargs)
 		if time.time() - cache[1] > cache_page.timeout:
 			cache[0] = await func(*args, **kwargs)
 			cache[1] = time.time()

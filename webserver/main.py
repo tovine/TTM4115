@@ -33,7 +33,19 @@ def main(ini):
 	web.run_app(app)
 
 if __name__ == "__main__":
-	configfile = sys.argv[1] if len(sys.argv) > 1 else "config.ini"
+	configfile = "config.ini"
+	args = sys.argv[1:]
+	while args:
+		if args[0] == "--config":
+			args.pop(0)
+			configfile = args.pop(0)
+		elif args[0] == "--no-cache":
+			import server
+			server.DOCACHE = False
+			args.pop(0)
+		else:
+			break
+	
 	if not os.path.exists(configfile):
 		with open(configfile, "w") as f:
 			f.write(default_config)
