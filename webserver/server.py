@@ -9,9 +9,6 @@ import mazemap
 
 HTML_base = """
 <!doctype html>
-<title>Toilet Finder</title>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-
 {text}
 """[1:-1]
 

@@ -1,39 +1,63 @@
-<script src="/static/scripts.js"></script>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+		<!--link rel="icon" href="/static/favicon.ico"-->
 
-<div id="loginform">
-	<label><b>Login:</b></label><br><br>
-	
-	<form action="/login" method="post">
-		<input type="hidden" name="action" value="login">
-		
-		<label><b>Username</b></label><br>
-		<input type="text" placeholder="Enter username" name="uname" required><br>
-		<br>
-		<label><b>Password</b></label><br>
-		<input type="password" placeholder="Enter password" name="psw" required><br>
-		<input type="checkbox" name="keep" value="logged_in"> Keep me logged in.<br>
-		<br>
-		<button type="submit">Login</button>
-	</form>
-	
-	<button onclick='toggle_visibity("registerform");toggle_visibity("loginform");'>Register a new user instead</button>		
-</div>
+		<title>Sign up page</title>
+		<link href="/static/bootstrap.min.css" rel="stylesheet">
+		<link href="/static/signin.css" rel="stylesheet">
+		<script src="/static/scripts.js"></script>
 
-<div id="registerform" style="display: none">
-	<label><b>Register new user:</b></label><br><br>
-	
-	<form action="/login" method="post">
-		<input type="hidden" name="action" value="register">
-		
-		<label><b>Username</b></label><br>
-		<input type="text" placeholder="Enter username" name="uname" required><br>
-		<br>
-		<label><b>Password</b></label><br>
-		<input type="password" placeholder="Enter password" name="psw" required><br>
-		<input type="password" placeholder="Re-enter password" name="psw2" required><br>
-		<br>
-		<button type="submit">Register</button>
-	</form>
-	
-	<button onclick='toggle_visibity("registerform");toggle_visibity("loginform");'>Login with existing user instead</button>
-</div>
+		<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+		<!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+			<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+		<div class="container">
+			<form class="form-signin" id="loginform" action="/login" method="post">
+				<input type="hidden" name="action" value="login">
+				
+				<h2 class="form-signin-heading">Please sign in</h2>
+				
+				<label for="inputEmail" class="sr-only">Enter username</label>
+				<input type="text" name="uname" id="inputEmail" class="form-control" placeholder="Enter username" required autofocus>
+				
+				<label for="inputPassword" class="sr-only">Enter password</label>
+				<input type="password" name="psw" id="inputPassword" class="form-control" placeholder="Enter password" required>
+			 	
+				<div class="checkbox">
+					<label>
+						<input type="checkbox" name="keep" value="logged_in"> Remember me
+					</label>
+				</div>
+				
+				<a href="javascript:toggle_visibity('registerform');toggle_visibity('loginform');">Register new user instead</a>
+				
+				<button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+			</form>
+			
+			<form class="form-signin" id="registerform" style="display: none" action="/login" method="post">
+				<input type="hidden" name="action" value="register">
+				
+				<h2 class="form-signin-heading">Please sign in</h2>
+				
+				<label for="inputEmail" class="sr-only">Enter username</label>
+				<input type="text" name="uname"  id="inputEmail" class="form-control" placeholder="Enter username" required autofocus>
+				
+				<label for="inputPassword" class="sr-only">Enter password</label>
+				<input type="password" name="psw" id="inputPassword" class="form-control" placeholder="Enter password" required>
+				
+				<label for="inputPasswordagain" class="sr-only">Re-enter password</label>
+				<input type="password" name="psw2" id="inputPasswordagain" class="form-control" placeholder="Re-enter password" required>
+				
+				<button class="btn btn-lg btn-primary btn-block" type="submit">Sign up</button>
+			</form>
+		</div><!-- /container -->
+	</body>
+</html>
