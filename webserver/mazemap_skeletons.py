@@ -2,8 +2,8 @@
 
 #
 JS_head = """
-<link rel="stylesheet" href="https://api.mazemap.com/js/v1.1.1/mazemap.min.css">
-<script type='text/javascript' src='https://api.mazemap.com/js/v1.1.1/mazemap.min.js'></script>
+<link rel="stylesheet" href="https://api.mazemap.com/js/v1.2.9/mazemap.min.css">
+<script type='text/javascript' src='https://api.mazemap.com/js/v1.2.9/mazemap.min.js'></script>
 """[1:-1]
 
 #
@@ -14,7 +14,10 @@ JS_body = """
 var map = Maze.map('mazemap-container', {{campusloader: false}});
 Maze.Instancer.getCampus(1).then( function (campus) {{
 	map.fitBounds(campus.getBounds());
-	campus.addTo(map);
+	campus.addTo(map).setActive().then( function() {{
+			map.setZLevel(1);
+			map.getZLevelControl().show();
+	}});
 }});
 
 {code}
