@@ -206,23 +206,34 @@ async def GET_map(request):
 			tags.append(int(i))
 		elif key=="id":
 			ids.append(int(i))
+	ids = set(ids)
 	
 	if not tags:
 		toilets = await database.select_toilet_statuses(request)
 	else:
 		toilets = await database.select_toilet_statuses_by_tags(request, tags)
 	
+	#clientside filtering is horrible
 	if ids:
 		toilets = tuple(i for i in toilets if i[0] in ids)
 	
-	red, blue = [], []
+	red, blue, purple = [], [], []
 	for ID, lat, lng, name, status, dt in toilets:
-		(blue if status else red).append((ID, lat, lng, name, None))
+		if status == 1:#available
+			blue.append((ID, lat, lng, name, None))
+		elif status == 2:#unavailable
+			red.append((ID, lat, lng, name, None))
+		elif status == 0:#offline
+			purple.append((ID, lat, lng, name, None))
 	
-	out = "%s\n%s" % (
-		mazemap.make_marker_chubs(red, color = "red") if mode == "all" else "",
-		mazemap.make_marker_chubs(blue, color = "blue")
-	)
+	if mode == "all":
+		out = "\n".join((
+			mazemap.make_marker_chubs(red   , color = "red"),
+			mazemap.make_marker_chubs(blue  , color = "blue"),
+			mazemap.make_marker_chubs(purple, color = "purple")
+		))
+	else:
+		out=mazemap.make_marker_chubs(blue, color = "blue")
 	
 	return mazemap.JS_skeleton.format(code = out)
 
