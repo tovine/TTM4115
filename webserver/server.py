@@ -1,4 +1,4 @@
-import asyncio, base64, bcrypt, time, string
+import asyncio, base64, bcrypt, time, string, random
 from aiohttp import web
 from cryptography import fernet
 from aiohttp_session import setup as session_setup, get_session, session_middleware
@@ -142,6 +142,9 @@ async def POST_login(request):
 			
 			if entry[0][3]:
 				session["is_admin"] = True
+			else:
+				if "is_admin" in session:
+					del session["is_admin"]
 			
 			if "keep" in data and data["keep"] == "logged_in":
 				session["ignore_timeout"] = True
@@ -230,7 +233,12 @@ async def GET_settings(request, base_tag, base):
 	tags = await database.select_tags(request)
 	tag_checkboxes = "\n\t".join((base_tag.format(ID=ID, label=label) for ID, label in tags))
 	
-	return base.format(email="{email}", tags=tag_checkboxes)
+	#cross-site request forgery protection
+	session = await get_session(request)
+	form_id = random.randrange(0, 0xffffffff)
+	session["form_id"] = form_id
+	
+	return base.format(email="{email}", tags=tag_checkboxes, form_id=form_id)
 
 @handle_html
 @require_login
@@ -238,8 +246,12 @@ async def POST_settings(request):
 	session = await get_session(request)
 	data = await request.post()
 	uname = session["uname"]
+	if "form_id" not in session:
+		return "Error: No form-id in session"
 	
-	if "action" in data:
+	if "action" in data and "request_forgery" in data:
+		if int(data["request_forgery"]) != session["form_id"]:
+			return "Error: Form id mismatch"
 		if data["action"] == "change_password":
 			if set(["cpsw", "psw", "psw2"]).issubset(data.keys()):
 				if data["psw"] != data["psw2"]:
