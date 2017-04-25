@@ -72,6 +72,13 @@ async def insert_toilet(request, lat, lng, name, poi_ID):
 async def delete_toilets(request, IDs):
 	await execute(request, "DELETE FROM toilets WHERE id in %s", params=(tuple(IDs),))
 
+async def select_reports(request):#(id, desc, toilet(id))
+	return await execute(request, "SELECT * FROM reports", True)
+async def insert_report(request, desc, toilet):
+	return await execute(request, "INSERT INTO reports (description, toilet) VALUES (%s, %s) RETURNING id", 1, params=(str(desc), int(toilet)))
+async def delete_report(request, ID):
+	await execute(request, f"DELETE FROM reports WHERE id = {int(ID)}")
+
 async def insert_tag(request, name):
 	return await execute(request, "INSERT INTO tags (name) VALUES (%s) RETURNING id", 1, params=(name,))
 

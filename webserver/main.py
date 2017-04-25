@@ -42,7 +42,7 @@ def main(ini):
 		#sslc.load_verify_locations()
 	else:
 		sslc=None
-	web.run_app(app, port=8080, ssl_context=sslc)
+	web.run_app(app, port=8080, ssl_context=sslc)#blocking
 
 if __name__ == "__main__":
 	configfile = "config.ini"

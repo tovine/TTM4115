@@ -103,6 +103,8 @@ async def GET_index(request, base):
 		"<a href=\"/login\">/login</a><br/>",
 		"<a href=\"/settings\">/settings</a><br/>",
 		"<a href=\"/admin\">/admin</a><br/>",
+		"<a href=\"/report\">/report</a><br/>",
+		"<a href=\"/report?show\">/report?show</a><br/>",
 		"<a href=\"/mazetest\">/mazetest</a><br/>",
 		"<a href=\"http://disco.fleo.se/TEAM%2010%20FTW!!!\">Team 10 FTW</a>"
 	))
@@ -342,6 +344,56 @@ async def POST_admin(request):#todo: add/remove tag relations
 	
 	return "Not yet implemented"
 
+#report a problem
+@handle_html
+@using_base("radio_toilet.html")
+@using_base("report.html")
+@using_base("report_show_row.html")
+@using_base("report_show.html")
+async def GET_report(request, base_toilet, base, base_show_row, base_show):
+	if "show" in request.query:
+		reports = await database.select_reports(request)
+		
+		out = []
+		for ID, desc, toilet in reports:
+			toilet = await database.select_toilet(request, toilet)
+			toilet, lat, lng, name, poi_id = toilet[0]
+			desc = escape_html(desc)
+			out.append(base_show_row.format(**locals()))
+			
+		return base_show.format(reports="\n".join(out))
+	else:
+		toilets = await database.select_toilets(request)
+		toilet_checkboxes = "\n\t".join((base_toilet.format(**locals()) for ID, lat, lng, name, poi_id in toilets))
+		
+		return base.format(toilets = toilet_checkboxes)
+
+@handle_html
+async def POST_report(request):
+	session = await get_session(request)
+	data = await request.post()
+	
+	if "action" in data:
+		if data["action"] == "report_problem":
+			if "toilet" not in data:
+				return "Error: you must select a toilet!"
+			if "desc" not in data:
+				return "Error: missing description"
+			
+			await database.insert_report(request, data["desc"], int(data["toilet"]))
+			
+			return "Thanks for your report. :)"
+		elif data["action"] == "close_problem":
+			if "ID" not in data:
+				return "Error: missing id"
+			
+			await database.delete_report(request, int(data["ID"]))
+			
+			return "Problem has now been marked as solved. <a href=\"/report?show\">Back</a>"
+	
+	return f"Invalid POST request: <i>{data.items()}</i>"
+
+#mazetest
 @handle_html
 async def GET_test(request):
 	#session = await get_session(request)
@@ -354,6 +406,9 @@ def is_valid_username(uname):
 		if i not in string.ascii_letters and i not in string.digits:
 			return False
 	return True
+
+def escape_html(text, do_newline=True):
+	return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\n", "<br>" if do_newline else "\n")
 
 def create_session_secret():
 	fernet_key = fernet.Fernet.generate_key()
@@ -378,6 +433,9 @@ def add_routes(app, secret_key):
 	
 	app.router.add_get ('/admin', GET_admin)
 	app.router.add_post('/admin', POST_admin)
+	
+	app.router.add_get ('/report', GET_report)
+	app.router.add_post('/report', POST_report)
 	
 	app.router.add_get('/mazetest', GET_test)
 	
