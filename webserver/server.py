@@ -9,6 +9,7 @@ import mazemap
 
 #globals:
 DOCACHE = True
+
 HTML_base = """
 <!doctype html>
 {text}
@@ -81,12 +82,22 @@ def cache_page(func):#doesn't account for query parameters or different users
 		return cache[0]
 	return ret
 
+#frontpage
+@handle_html
+@using_base("checkbox_tag.html")
+@using_base("frontpage.html")
+async def GET_frontpage(request, base_tag, base):
+	tags = await database.select_tags(request)
+	tag_checkboxes = "\n\t\t\t\t".join((base_tag.format(ID=ID, label=label) for ID, label in tags))
+	return base.format(tags = tag_checkboxes)
+
 #index
 @handle_html
 @using_base("index.html")
 @cache_page
 async def GET_index(request, base):
 	text = "\n".join((
+		"<a href=\"/\">frontpage</a><br/>",
 		"<a href=\"/mapmaker\">/mapmaker</a><br/>",
 		"<a href=\"/map\">/map</a><br/>",
 		"<a href=\"/login\">/login</a><br/>",
@@ -341,7 +352,7 @@ def add_routes(app, secret_key):
 	cache_page.timeout  = app["ini"].getint("sessions", "cached_page_timeout")
 	
 	#app.router.add_route('POST', '/pv/v1/', handle_v1)
-	app.router.add_get('/',      GET_index)
+	app.router.add_get('/',      GET_frontpage)
 	app.router.add_get('/index', GET_index)
 	
 	app.router.add_get ('/login', GET_login)
