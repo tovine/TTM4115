@@ -9,10 +9,11 @@
 		{tags}
 		<br>
 		
+		<input type="checkbox" name="show_location" checked> Display my location<br>
 		<button type="submit">Show</button>
 	</form>
 </div>
 
 <div style="display:block; position: absolute; left: 50%; right: 0; top: 0; bottom: 0;">
-	<iframe name="embedded_map" src="/map" style="display:block;width:100%;height:100%;"></iframe>
+	<iframe name="embedded_map" src="/map?show_location" style="display:block;width:100%;height:100%;"></iframe>
 </div>

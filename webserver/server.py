@@ -87,9 +87,15 @@ def cache_page(func):#doesn't account for query parameters or different users
 @using_base("checkbox_tag.html")
 @using_base("frontpage.html")
 async def GET_frontpage(request, base_tag, base):
+	session = await get_session(request)
+	if "uname" not in session:
+		uname = ""
+	else:
+		uname = f"Logged in as <b>{session['uname']}</b>"
+	
 	tags = await database.select_tags(request)
 	tag_checkboxes = "\n\t\t\t\t".join((base_tag.format(ID=ID, label=label) for ID, label in tags))
-	return base.format(tags = tag_checkboxes)
+	return base.format(tags = tag_checkboxes, uname=uname)
 
 #index
 @handle_html
@@ -134,10 +140,10 @@ async def POST_login(request):
 			
 			entry = await database.select_user(request, uname)
 			if not entry:
-				return "Error: No such user."
+				return "Error: No such user.\n<br><a href='/login'>Go back</a>"
 			
 			if bcrypt.hashpw(psw.encode("UTF-8"), entry[0][2].encode("UTF-8")).decode("UTF-8") != entry[0][2]:
-				return "Error: Wrong password"
+				return "Error: Wrong password.\n<br><a href='/login'>Go back</a>"
 			
 			session["uname"] = uname
 			session["login_time"] = time.time()
@@ -152,7 +158,7 @@ async def POST_login(request):
 				session["ignore_timeout"] = True
 			
 			#success
-			out = "Login successfull!"
+			out = "Login successfull!<br>\n<a href='/'>Go to the frontage</a>"
 			if "return_after_login" in session:
 				out += f"<br/>\n<a href=\"{session['return_after_login']}\">Go back</a>"
 				del session["return_after_login"]
@@ -177,7 +183,7 @@ async def POST_login(request):
 			for i in ("uname", "ignore_timeout"):
 				if i in session:
 					del session[i]
-			return "Logged out"
+			return "Logged out.<br>\n<a href='/'>Frontpage</a>"
 			
 			
 	
@@ -199,6 +205,7 @@ async def GET_map(request):
 	tags = []
 	ids = []
 	mode = "all"
+	showLocation=False
 	for key, i in request.query.items():
 		if key == "mode":
 			mode = i
@@ -206,6 +213,8 @@ async def GET_map(request):
 			tags.append(int(i))
 		elif key=="id":
 			ids.append(int(i))
+		elif key=="show_location":
+			showLocation=True
 	ids = set(ids)
 	
 	if not tags:
@@ -213,7 +222,7 @@ async def GET_map(request):
 	else:
 		toilets = await database.select_toilet_statuses_by_tags(request, tags)
 	
-	#clientside filtering is horrible
+	#clientside filtering is a horrible idea
 	if ids:
 		toilets = tuple(i for i in toilets if i[0] in ids)
 	
@@ -234,6 +243,9 @@ async def GET_map(request):
 		))
 	else:
 		out=mazemap.make_marker_chubs(blue, color = "blue")
+	
+	if showLocation:#ew
+		out = "%s\n%s" % (mazemap.JS_map_locator, out)
 	
 	return mazemap.JS_skeleton.format(code = out)
 

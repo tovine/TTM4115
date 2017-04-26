@@ -2,8 +2,11 @@
 
 #
 JS_head = """
-<link rel="stylesheet" href="https://api.mazemap.com/js/v1.2.9/mazemap.min.css">
-<script type='text/javascript' src='https://api.mazemap.com/js/v1.2.9/mazemap.min.js'></script>
+<link rel="stylesheet" href="https://api.mazemap.com/js/v1.2.10/mazemap.min.css">
+<script type='text/javascript' src='https://api.mazemap.com/js/v1.2.10/mazemap.min.js'></script>
+<script>window.L = window.Maze;</script>
+<script src='https://api.mazemap.com/js/v1.2.10/example-plugins/Leaflet.Icon.Pulse/L.Icon.Pulse.js'></script>
+<link href="https://api.mazemap.com/js/v1.2.10/example-plugins/Leaflet.Icon.Pulse/L.Icon.Pulse.css" rel="stylesheet">
 """[1:-1]
 
 #
@@ -49,5 +52,21 @@ Maze.marker([{lng}, {lat}], {{
 """[1:-1]
 
 #
-
+JS_map_locator = """
+var pulsingMarker = null;
+map.on('locationfound', function(ev) {
+	console.log('locationfound');
+	
+	if(pulsingMarker){
+		pulsingMarker.setLatLng(ev.latlng);
+		
+	}else{
+		var pulsingIcon = Maze.icon.pulse({iconSize:[20, 20],color:'red'});
+		pulsingMarker = Maze.marker(ev.latlng, {
+			icon: pulsingIcon
+		}).addTo(map);
+	}
+});
+map.locate({ setView: false, enableHighAccuracy: true });
+"""[1:-1]
 
