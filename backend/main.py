@@ -1,13 +1,13 @@
-import asyncio, configparser
+import asyncio, configparser, sys, os
 from mqtt_client import MQTT
 from database import main_coro
 
 default_config = """
 [MQTT]
-broker = mqtt://backend:hunter2@klient.pbsds.net:1883
-certfile = None
+broker = mqtts://backend:hunter2@129.241.210.131:8883
+certfile = certfile.crt
 
-[postres]
+[postgres]
 host=klient.pbsds.net
 dbname=shitbase
 user=backend
@@ -23,6 +23,8 @@ def main(ini):
 	certfile = ini.get("MQTT", "certfile")
 	
 	mqtt = MQTT(loop, broker)
+	if certfile!="none":
+		mqtt.set_certfile(certfile)
 	
 	dbHost   = ini.get("postgres", "host")
 	dbName   = ini.get("postgres", "dbname")
@@ -32,7 +34,6 @@ def main(ini):
 	#run:
 	tasks = [
 		mqtt.main_coro(),
-		mqtt.queue_coro(),
 		main_coro(mqtt, dbHost, dbName, dbUser, dbPasswd)
 	]
 	

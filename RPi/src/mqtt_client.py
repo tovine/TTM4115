@@ -21,6 +21,7 @@ class MQTT():
 		self.C = MQTTClient(config=self.config)#, loop=EventLoop)
 		self.broker = broker
 		self.lastwill = None
+		self.cafile=None
 		
 		#keeping track of subscriptions:
 		self.topics = {}#["topic"] = [callback]
@@ -37,7 +38,8 @@ class MQTT():
 			"retain" : retain
 		}
 		self.C.config.update(self.config)#totally not a bodge
-	
+	def set_certfile(self, cafile):#must set be done before main_coro is run
+		self.cafile = cafile
 	#coroutines
 	async def publish(self, topic, data, qos=None):
 		while not self.connected:
@@ -54,12 +56,12 @@ class MQTT():
 		if decode:
 			old = callback
 			def callback(topic, data):
-				old(topic, (str(data, "utf-8"))
+				old(topic, (str(data, "utf-8")))
 		
 		self.topics[topic] = callback
 		await self.C.subscribe([(topic, qos)])
 		
-	#normal counterparts (requires queue_coro() to be running alongside main_coro())
+	#normal counterparts
 	def enqueue_publish(self, *args, **kwargs):
 		self.queue.append((self.publish, args, kwargs))
 	def enqueue_subscribe(self, *args, **kwargs):
@@ -71,13 +73,12 @@ class MQTT():
 		
 		if debug: print("Connecting to %s..." % self.broker)
 		
-		await C.connect(self.broker)
+		await C.connect(self.broker, cafile=self.cafile)
 		self.connected = True
 		
 		if debug: print( "Connected to %s" % self.broker)
 		
 		asyncio.ensure_future(self._queue_coro())
-		#await self.EventLoop.create_task(cor1())
 		
 		try:
 			while 1:
@@ -87,8 +88,8 @@ class MQTT():
 				if debug:
 					print("%s: %s" % (topic, str(data, "utf-8")))
 				
-				for func in (self.topics[i] for i in self.topics if matches()):
-					self.EventLoop.call_soon(func, data)
+				for func in (self.topics[i] for i in self.topics if matches(topic, i)):
+					self.EventLoop.call_soon(func, topic, data)
 			
 			await C.unsubscribe(list(self.topic.keys()))
 			await C.disconnect()
@@ -102,7 +103,7 @@ class MQTT():
 		if stopLoop:
 			self.EventLoop.stop()
 	
-	async def queue_coro(self):#optional loop
+	async def _queue_coro(self):
 		while 1:
 			while self.queue:
 				func, args, kwargs = self.queue.pop(0)

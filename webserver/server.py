@@ -223,7 +223,7 @@ async def GET_map(request):
 			blue.append((ID, lat, lng, name, None))
 		elif status == 2:#unavailable
 			red.append((ID, lat, lng, name, None))
-		elif status == 0:#offline
+		elif not status:#offline
 			purple.append((ID, lat, lng, name, None))
 	
 	if mode == "all":

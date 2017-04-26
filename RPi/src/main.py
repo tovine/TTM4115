@@ -6,8 +6,8 @@ import sensor
 DEBUG = False
 default_config = """
 [MQTT]
-broker = mqtt://sensor:hunter2@klient.pbsds.net:1883
-certfile = None
+broker = mqtts://sensor:hunter2@129.241.210.131:8883
+certfile = certfile.crt
 
 [sensor]
 ID = 0
@@ -27,6 +27,8 @@ def main(ini):
 	certfile = ini.get("MQTT", "certfile")
 	
 	mqtt = MQTT(loop, broker)
+	if certfile!="none":
+		mqtt.set_certfile(certfile)
 	
 	sensorid  = ini.getint("sensor", "ID")
 	gpio_port = ini.getint("sensor", "GPIO_BCM_Port")
@@ -34,7 +36,6 @@ def main(ini):
 	#run:
 	tasks = [
 		mqtt.main_coro(debug=DEBUG, stopLoop=True),
-		mqtt.queue_coro(),
 		sensor.maincoro(loop, mqtt, sensorid, gpio_port)
 		#init(mqtt)
 	]

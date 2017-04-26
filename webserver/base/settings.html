@@ -1,20 +1,23 @@
 <script src="/static/scripts.js"></script>
 
-<label><b>User information: (not implemented in database)</b></label><br><br>
-<form action="/settings" method="post">
-	<input type="hidden" name="action" value="change_profile">
-	<input type="hidden" name="request_forgery" value="{form_id}">
-	
-	<label><b>Email</b></label><br>
-	<input type="text" name="cpsw" value="{email}" required><br>
-	<br>
-	
-	<label><b>Tags</b></label><br>
-	{tags}
-	<br>
-	
-	<button type="submit">Submit changes</button>
-</form>
+<button id="userinfobutton" onclick='toggle_visibity("userinfoform");toggle_visibity("userinfobutton");'>Change user information  (not implemented in database)</button>
+<div id="userinfoform" style="display: none">
+	<label><b>User information: (not implemented in database)</b></label><br><br>
+	<form action="/settings" method="post">
+		<input type="hidden" name="action" value="change_profile">
+		<input type="hidden" name="request_forgery" value="{form_id}">
+		
+		<label><b>Email</b></label><br>
+		<input type="text" name="cpsw" value="{email}" required><br>
+		<br>
+		
+		<label><b>Tags</b></label><br>
+		{tags}
+		<br>
+		
+		<button type="submit">Submit changes</button>
+	</form>
+</div>
 
 <hr>
 
