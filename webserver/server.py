@@ -228,6 +228,8 @@ async def GET_map(request):
 	
 	red, blue, purple = [], [], []
 	for ID, lat, lng, name, status, dt in toilets:
+		#random.choice((red, blue)).append((ID, lat, lng, name, None))
+		#continue
 		if status == 1:#available
 			blue.append((ID, lat, lng, name, None))
 		elif status == 2:#unavailable

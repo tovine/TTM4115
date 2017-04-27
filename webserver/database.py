@@ -42,6 +42,12 @@ async def execute(request, query, fetch=False, params=None):
 async def select_tags(request, fetch=True):#(id, name)
 	return await execute(request, "SELECT * FROM tags", fetch)
 
+async def select_statuses(request, fetch=True):#(toilet, dt, status)
+	return await execute("SELECT * FROM status ORDER BY dt ASC", fetch)
+
+async def select_statuses_by_toilet(request, toilet, fetch=True):#(toilet, dt, status)
+	return await execute("SELECT * FROM status WHERE toilet=%s ORDER BY dt ASC", fetch, params=(int(toilet),))
+
 async def select_toilets(request, fetch=True):#(id, lat, lng, name, poi_id)
 	return await execute(request, "SELECT * FROM toilets ORDER BY id DESC", fetch)
 
