@@ -18,7 +18,7 @@ GPIO_BCM_Port = 4
 @asyncio.coroutine
 def init(mqtt):
 	print("Subscribing to \"$SYS/broker/uptime\"... ", end="")
-	await mqtt.subscribe("$SYS/broker/uptime", callback=print)
+	yield from mqtt.subscribe("$SYS/broker/uptime", callback=print)
 	print("Done!")
 
 def main(ini):
