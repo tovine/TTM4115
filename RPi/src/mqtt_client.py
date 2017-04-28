@@ -32,7 +32,7 @@ class MQTT():
 	#further config
 	def set_lastwill(self, topic, message, QOS, retain = False):#must set be done before main_coro is run
 		self.config["will"] = {
-			"message": message,
+			"message": bytes(message, "UTF-8"),
 			"topic": topic,
 			"qos": QOS,
 			"retain" : retain

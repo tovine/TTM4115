@@ -37,7 +37,7 @@ def main(ini):
 	#run:
 	tasks = [
 		mqtt.main_coro(debug=DEBUG, stopLoop=True),
-		sensor.maincoro(loop, mqtt, sensorid, gpio_port)
+		sensor.maincoro(loop, mqtt, sensorid, gpio_port),
 		init(mqtt)
 	]
 	
