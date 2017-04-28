@@ -371,6 +371,7 @@ async def POST_admin(request):#todo: add/remove tag relations
 
 #report a problem
 @handle_html
+@require_login
 @using_base("radio_toilet.html")
 @using_base("report.html")
 @using_base("report_show_row.html")

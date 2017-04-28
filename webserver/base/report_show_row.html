@@ -1,9 +1,9 @@
 	<tr>
-		<th><a href="/map?id={toilet}" target="_blank" title="poi({poi_id}) = [{lat}, {lng}]">{name}</a></th>
-		<th>{desc}</th>
-		<th><form action="/report" method="post">
+		<td><a href="/map?id={toilet}" target="_blank" title="poi({poi_id}) = [{lat}, {lng}]">{name}</a></td>
+		<td>{desc}</td>
+		<td><center><form action="/report" method="post">
 			<input type="hidden" name="action" value="close_problem">
 			<input type="hidden" name="ID" value="{ID}">
-			<button type="submit">Mark as solved</button>
-		</form></th>
+			<button type="submit" style="width:50%;">Mark as solved</button>
+		</form></center></td>
 	</tr>
