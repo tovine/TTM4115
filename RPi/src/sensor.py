@@ -1,4 +1,5 @@
 from mqtt_client import QOS_0, QOS_1, QOS_2
+import asyncio
 try:
 	import RPi.GPIO as GPIO
 except RuntimeError:
