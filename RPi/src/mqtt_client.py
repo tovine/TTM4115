@@ -1,5 +1,5 @@
 import asyncio
-from inspect import iscoroutinefunction
+#from inspect import iscoroutinefunction
 from hbmqtt.client import MQTTClient, ClientException
 from hbmqtt.mqtt.constants import QOS_0, QOS_1, QOS_2
 from hbmqtt.broker import Broker
@@ -42,14 +42,14 @@ class MQTT():
 		self.cafile = cafile
 	#coroutines
 	@asyncio.coroutine
-	def publish(self, topic, data, qos=None):
+	def publish(self, topic, data, qos=None, retain=False):
 		while not self.connected:
 			yield from asyncio.sleep(0.2)
 		
 		if type(data) != bytes:
 			data = bytes(data, "UTF-8")
 		
-		yield from self.C.publish(topic, data, qos=qos)
+		yield from self.C.publish(topic, data, qos=qos, retain=retain)
 	@asyncio.coroutine
 	def subscribe(self, topic, callback=lambda topic, data: None, decode=True, qos=QOS_0):
 		while not self.connected:

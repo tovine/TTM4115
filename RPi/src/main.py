@@ -38,7 +38,7 @@ def main(ini):
 	tasks = [
 		mqtt.main_coro(debug=DEBUG, stopLoop=True),
 		sensor.maincoro(loop, mqtt, sensorid, gpio_port)
-		#init(mqtt)
+		init(mqtt)
 	]
 	
 	loop.run_until_complete(asyncio.gather(*tasks))#waits untill all tasks are complete
