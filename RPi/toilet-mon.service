@@ -4,6 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
+User=pi
 WorkingDirectory=/home/pi/TTM4115/RPi/src
 Environment="PATH=/home/pi/berryconda3/bin:$PATH"
 ExecStart=/home/pi/berryconda3/bin/python main.py
