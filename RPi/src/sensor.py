@@ -20,7 +20,7 @@ def maincoro(eventloop, mqtt, ID, gpio_port):
 	mqtt.set_lastwill(sensor_topic % ID, DEAD, QOS_1, retain=True)
 	
 	GPIO.setmode(GPIO.BCM)
-	GPIO.setup(gpio_port, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+	GPIO.setup(gpio_port, GPIO.IN)#, pull_up_down=GPIO.PUD_DOWN)
 	
 	@asyncio.coroutine
 	def runtime(eventLoop, mqtt, ID, gpio_port):
