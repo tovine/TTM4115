@@ -41,17 +41,19 @@ class MQTT():
 	def set_certfile(self, cafile):#must set be done before main_coro is run
 		self.cafile = cafile
 	#coroutines
-	async def publish(self, topic, data, qos=None):
+	@asyncio.coroutine
+	def publish(self, topic, data, qos=None):
 		while not self.connected:
-			await asyncio.sleep(0.2)
+			yield from asyncio.sleep(0.2)
 		
 		if type(data) != bytes:
 			data = bytes(data, "UTF-8")
 		
-		await self.C.publish(topic, data, qos=qos)
-	async def subscribe(self, topic, callback=lambda topic, data: None, decode=True, qos=QOS_0):
+		yield from self.C.publish(topic, data, qos=qos)
+	@asyncio.coroutine
+	def subscribe(self, topic, callback=lambda topic, data: None, decode=True, qos=QOS_0):
 		while not self.connected:
-			await asyncio.sleep(0.2)
+			yield from asyncio.sleep(0.2)
 		
 		if decode:
 			old = callback
@@ -59,7 +61,7 @@ class MQTT():
 				old(topic, (str(data, "utf-8")))
 		
 		self.topics[topic] = callback
-		await self.C.subscribe([(topic, qos)])
+		yield from self.C.subscribe([(topic, qos)])
 		
 	#normal counterparts
 	def enqueue_publish(self, *args, **kwargs):
@@ -68,12 +70,13 @@ class MQTT():
 		self.queue.append((self.subscribe, args, kwargs))
 	
 	#mainloop
-	async def main_coro(self, debug=False, stopLoop=False):
+	@asyncio.coroutine
+	def main_coro(self, debug=False, stopLoop=False):
 		C = self.C
 		
 		if debug: print("Connecting to %s..." % self.broker)
 		
-		await C.connect(self.broker, cafile=self.cafile)
+		yield from C.connect(self.broker, cafile=self.cafile)
 		self.connected = True
 		
 		if debug: print( "Connected to %s" % self.broker)
@@ -82,7 +85,7 @@ class MQTT():
 		
 		try:
 			while 1:
-				message = await C.deliver_message()
+				message = yield from C.deliver_message()
 				topic = message.publish_packet.variable_header.topic_name
 				data = message.publish_packet.payload.data
 				if debug:
@@ -91,8 +94,8 @@ class MQTT():
 				for func in (self.topics[i] for i in self.topics if matches(topic, i)):
 					self.EventLoop.call_soon(func, topic, data)
 			
-			await C.unsubscribe(list(self.topic.keys()))
-			await C.disconnect()
+			yield from C.unsubscribe(list(self.topic.keys()))
+			yield from C.disconnect()
 			
 			if debug:print("Disconnected from %s" % self.broker)
 		except ClientException as ce:
@@ -102,13 +105,13 @@ class MQTT():
 		
 		if stopLoop:
 			self.EventLoop.stop()
-	
-	async def _queue_coro(self):
+	@asyncio.coroutine
+	def _queue_coro(self):
 		while 1:
 			while self.queue:
 				func, args, kwargs = self.queue.pop(0)
-				await func(*args, **kwargs)
-			await asyncio.sleep(1)
+				yield from func(*args, **kwargs)
+			yield from asyncio.sleep(1)
 	
 
 

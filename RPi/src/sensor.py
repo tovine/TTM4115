@@ -21,20 +21,21 @@ def maincoro(eventloop, mqtt, ID, gpio_port):
 	GPIO.setmode(GPIO.BCM)
 	GPIO.setup(gpio_port, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 	
-	async def runtime(eventLoop, mqtt, ID, gpio_port):
-		await mqtt.publish(sensor_topic%ID, ALIVE, QOS_1, retain=True)
+	@asyncio.coroutine
+	def runtime(eventLoop, mqtt, ID, gpio_port):
+		yield from mqtt.publish(sensor_topic%ID, ALIVE, QOS_1, retain=True)
 		
 		PrevDoorstate = GPIO.input(gpio_port)
-		await mqtt.publish(state_topic%ID, states[PrevDoorstate], QOS_1, retain=True)
+		yield from mqtt.publish(state_topic%ID, states[PrevDoorstate], QOS_1, retain=True)
 		
 		while 1:
-			await asyncio.sleep(1)
+			yield from asyncio.sleep(1)
 			
 			Doorstate = GPIO.input(gpio_port)
 			
 			if PrevDoorstate != Doorstate:
-				await mqtt.publish(state_topic%ID, states[Doorstate], QOS_1, retain=True)
+				yield from mqtt.publish(state_topic%ID, states[Doorstate], QOS_1, retain=True)
 				PrevDoorstate = Doorstate
 		
-		await mqtt.publish(sensor_topic%ID, DEAD, QOS_1, retain=True)
+		yield from mqtt.publish(sensor_topic%ID, DEAD, QOS_1, retain=True)
 	return runtime(eventloop, mqtt, ID, gpio_port)

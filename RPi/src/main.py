@@ -15,7 +15,8 @@ GPIO_BCM_Port = 4
 
 """[1:-1]#removes first and last newline
 
-async def init(mqtt):
+@asyncio.coroutine
+def init(mqtt):
 	print("Subscribing to \"$SYS/broker/uptime\"... ", end="")
 	await mqtt.subscribe("$SYS/broker/uptime", callback=print)
 	print("Done!")
